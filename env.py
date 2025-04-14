@@ -1,56 +1,34 @@
-from gymnasium import gym
-from abc import ABC, abstractmethod
-import numpy as np
+import gym
+from gym import spaces
 
-class SimpleEnv(ABC, gym.Env):
-    def __init__(self, N : int):
-        super(SimpleEnv, self).__init__()
+class CombinatorialEnv(gym.Env):
+    def __init__(self, N):
+        self.N = N
+        self.DECISIONS = int(N * (N - 1) / 2)
+        self.state = np.zeros(self.DECISIONS)
+        self.step_count = 0
 
-        # Here we need to specify the differnet possible observations
+        self.action_space = spaces.Discrete(2)  # 0 or 1
+        self.observation_space = spaces.Box(low=0, high=1, shape=(2 * self.DECISIONS,), dtype=np.float32)
 
-        self.N = N   #number of vertices in the graph. Change if needed
-        self.decisions = int(N*(N-1)/2)  #The length of the word we are generating. Here we are generating a graph, so we create a 0-1 word of length
-        observation_space = 2*self.decisions
+    def reset(self):
+        self.state = np.zeros(self.DECISIONS)
+        self.step_count = 0
+        return self._get_obs()
 
-        self.observation_space = spaces.MultiBinary(observation_space) #Binärere Vektor der Länge "observation_space" für One-hot encoding
-
-        # Discrete Actions
-        self.action_space = spaces.Discrete(2) #Gibt nur zwei discrete Handlungen
-
-
-        #Update later
-        self.state = None
-        self.max_steps = 20
-        self.current_step = 0
-
-    def reset(self, seed=None, options=None):
-        super().reset(seed=seed)
-        
-        #update later
-        self.state = None
-        self.current_step = 0
-        return self.state, {}
+    def _get_obs(self):
+        obs = np.zeros(2 * self.DECISIONS)
+        obs[:self.DECISIONS] = self.state
+        obs[self.DECISIONS + self.step_count] = 1  # One-hot position
+        return obs
 
     def step(self, action):
-        self.current_step += 1
+        self.state[self.step_count] = action
+        self.step_count += 1
 
-        self.take_action(action)
+        done = self.step_count == self.DECISIONS
+        reward = 0
+        if done:
+            reward = calc_score(self.state.astype(int))
 
-        done = self.current_step >= self.max_steps or self.state[0] == 0
-        reward = self.calc_reward(self.state, self.action)
-
-        return self.state, reward, done, False, {}
-
-    @abstractmethod
-    def take_action(self, action):
-        pass
-
-    @abstractmethod
-    def calc_reward(self, state, action):
-        pass
-
-    def render(self):
-        print(f"State: {self.state[0]}")
-
-    def close(self):
-        pass
+        return self._get_obs(), reward, done, {}
