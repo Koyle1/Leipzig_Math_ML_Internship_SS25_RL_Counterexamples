@@ -11,9 +11,9 @@ class modelCallback(BaseCallback):
     def _on_step(self) -> bool:
         if self.n_calls % self.save_freq == 0:
             torch.save(self.model.policy.state_dict(), self.save_path)
-            print(f"Reward: {self.locals.get("rewards")}")
-            print(f"Dones: {self.locals.get("dones")}")
-            print(f"Info: {self.locals.get("infos")}")
+            print(f"Reward: {self.locals.get('rewards')}")
+            print(f"Dones: {self.locals.get('dones')}")
+            print(f"Info: {self.locals.get('infos')}")
             print(f"Gewichte bei Schritt {self.n_calls} gespeichert.")
             value_loss = self.model.logger.name_to_value.get("train/value_loss")
             if value_loss is not None and value_loss < self.threshhold:
