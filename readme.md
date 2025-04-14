@@ -4,6 +4,13 @@ conducted by Adam Zsolt Wagner in the paper "Constructions in combinatorics via 
 
 How to run?
 - Open Terminal
+- change to the repository where these files are located (e.g. cd ~/path/to/MATH_ML)
+- DO a)
     - conda env create -f conda_env.yml
     - conda activate math_ml
     - python train.py
+- OR b)
+    - change to the repository where these files are located (e.g ~/path/to/MATH_ML)
+    - docker buildx build -t "math_ml" .
+    - docker run "math_ml"
+
