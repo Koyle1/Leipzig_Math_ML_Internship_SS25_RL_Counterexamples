@@ -15,6 +15,9 @@ INF = 1000000
 
 @njit
 def bfs(Gdeg, edgeListG):
+    '''
+        Calculates shortest path matrix
+    '''
     distMat1 = np.zeros((N, N))
     conn = True
     for s in range(N):
@@ -48,6 +51,9 @@ def bfs(Gdeg, edgeListG):
 
 @njit
 def jitted_calcScore(state):
+    '''
+        Returns the reward for the graph -> positive counterexample
+    '''
     adjMatG = np.zeros((N, N), dtype=np.int8)
     edgeListG = np.zeros((N, N), dtype=np.int8)
     Gdeg = np.zeros(N, dtype=np.int8)

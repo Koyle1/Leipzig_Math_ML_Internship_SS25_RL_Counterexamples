@@ -19,4 +19,8 @@ class modelCallback(BaseCallback):
             if value_loss is not None and value_loss < self.threshhold:
                 print(f"Stop, Value_loss: {value_loss}")
                 return False
+            #Change for non sequential enviorment
+            if self.locals.get('rewards') is not None and self.locals.get('rewards').any() > 0:
+                print("Counterexample found!")
+                return False
         return True
