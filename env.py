@@ -10,12 +10,12 @@ class SimpleEnv(ABC, gym.Env):
 
         self.N = N   #number of vertices in the graph. Change if needed
         self.decisions = int(N*(N-1)/2)  #The length of the word we are generating. Here we are generating a graph, so we create a 0-1 word of length
-        observation_space = 2*self.decisions
+        observation_space = 2*self.decisions # represents the word which is developed (first half), and the index for the next action (second half)
 
-        self.observation_space = spaces.MultiBinary(observation_space) #Binärere Vektor der Länge "observation_space" für One-hot encoding
+        self.observation_space = spaces.MultiBinary(observation_space) # binary vectors of length "observation_space" for One-hot encoding
 
         # Discrete Actions
-        self.action_space = spaces.Discrete(2) #Gibt nur zwei discrete Handlungen
+        self.action_space = spaces.Discrete(2) # there are only two discrete actions (0, 1)
 
 
         #Update later

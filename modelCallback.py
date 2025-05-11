@@ -14,7 +14,7 @@ class modelCallback(BaseCallback):
             print(f"Reward: {self.locals.get('rewards')}")
             print(f"Dones: {self.locals.get('dones')}")
             print(f"Info: {self.locals.get('infos')}")
-            print(f"Gewichte bei Schritt {self.n_calls} gespeichert.")
+            print(f"Saved weights at step {self.n_calls}")
             value_loss = self.model.logger.name_to_value.get("train/value_loss")
             if value_loss is not None and value_loss < self.threshhold:
                 print(f"Stop, Value_loss: {value_loss}")

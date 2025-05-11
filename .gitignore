@@ -1,2 +1,10 @@
-ppo_weights.pth 
+# artifacts
+*.pth
+*.zip
 __pycache__/
+
+# Virtual envs
+venv
+.venv
+conda
+.conda
