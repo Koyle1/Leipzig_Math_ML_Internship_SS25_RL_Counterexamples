@@ -1,0 +1,6 @@
+tensorflow
+keras
+networkx
+numpy
+matplotlib
+scipy

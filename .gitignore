@@ -2,6 +2,7 @@
 *.pth
 *.zip
 __pycache__/
+wagner_combinatorics/out
 
 # Virtual envs
 venv
