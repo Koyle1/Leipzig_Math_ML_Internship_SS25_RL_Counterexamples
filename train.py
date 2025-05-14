@@ -1,13 +1,13 @@
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
-from model import model
+from model import Model_PPO
 from graphEnv import GraphConstructionEnv
 from seqGraphEnv import SeqGraphConstructionEnv
 
 
 print("Training starts...")
 env = make_vec_env(SeqGraphConstructionEnv, n_envs=8)
-m = model("MlpPolicy", env, verbose=1)
+m = Model_PPO("MlpPolicy", env, verbose=1)
 try:
     m.load_weights(source="seq_weights.pth")
 except:
