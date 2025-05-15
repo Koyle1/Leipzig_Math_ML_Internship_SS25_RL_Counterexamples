@@ -17,12 +17,16 @@ def main():
     
     print("Training starts...")
     #Added aditional 
+
+    seed = get_seed(args.seed_nr)
+    
     env = make_vec_env(args.enviroment,
                        n_envs=8)
 
     m = Model.create(args.model, 
                      "MlpPolicy",
                      env,
+                     seed=seed,
                      verbose=1)
     try:
         m.load_weights(source=args.save_path)
@@ -31,8 +35,29 @@ def main():
     m.model_train(save_path=args.save_path)
     m.save("ppo_graph_constructor")
 
-def seed(number: int = 0):
-    pass
+def get_seed(number: int):
+    seeds= [278485391,
+            282931393,
+            255812181,
+            222190534,
+            123027592,
+            265054478,
+            194916960,
+            163829584,
+            197921026,
+            765436071,
+            676906395,
+            316983907,
+            306006899,
+            304396019,
+            135212709,
+            597077742,
+            214792385,
+            170222376,
+            472807066,
+            248379215]
+    
+    return seeds[number]
     
 if __name__ == "__main__":
     main()
