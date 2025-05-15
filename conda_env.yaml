@@ -2,20 +2,19 @@ name: math_ml
 
 channels:
   - conda-forge
-  - https://conda.anaconda.org/conda-forge/
   - defaults
 
 dependencies:
-  - python=3.11.0=ha86cf86_0_cpython
-  - pip=23.0.1=py311h06a4308_0
+  - python=3.11
+  - pip
+  - numba
+  - scipy
   - pip:
-    - stable-baselines3>=1.2.0
-    - gymnasium>=0.25.0
-    - numpy>=1.18.1
-    - numba>=0.48
-    - torch>=1.4.0 
-    - gym>=0.17.0
-    - shimmy>=2.0
-    - scipy>=0.16
-
-prefix: /opt/conda/envs/math_ml
+      - torch>=2.1.0
+      - gymnasium>=0.28.0
+      - shimmy>=2.0
+      - stable-baselines3>=2.0.0
+      - pandas==2.1.4
+      - numpy==1.24.4
+      - gym
+      
