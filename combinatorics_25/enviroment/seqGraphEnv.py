@@ -175,6 +175,10 @@ class SeqGraphConstructionEnv(gym.Env):
         if reward > 0:
             print(self.obs)
         info = {}
+        
+        if terminated or truncated:
+            info["episode"] = {"r": episode_reward, "l": episode_length}
+        
         return self.obs, reward, terminated, truncated, info
 
     def render(self, mode="human"):

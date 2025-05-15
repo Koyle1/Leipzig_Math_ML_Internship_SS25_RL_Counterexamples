@@ -97,6 +97,9 @@ class GraphConstructionEnv(gym.Env):
         self.observation_space = spaces.Box(low=0, high=1, shape=(OBSERVATION_SPACE,), dtype=np.int8)
         self.action_space = spaces.Discrete(2)  # binary: 0 or 1
 
+        self.episode_reward = 0
+        self.episode_length = 0
+
         self.reset()
     
     #TBU FOR EVALUATION
@@ -132,11 +135,20 @@ class GraphConstructionEnv(gym.Env):
         if terminated:
             reward = jitted_calcScore(self.state)
 
+        self.episode_reward += reward
+        self.episode_length += 1
+
         self._update_observation()
         info = {}
         if reward > 0:
             print(self.obs)
-            
+
+        if terminated or truncated:
+            info["episode"] = {
+                "r": self.episode_reward,
+                "l": self.episode_length
+            }
+
         return self.obs, reward, terminated, truncated, info
 
     def render(self, mode="human"):
