@@ -135,18 +135,17 @@ class GraphConstructionEnv(gym.Env):
         if terminated:
             reward = jitted_calcScore(self.state)
 
-        self.episode_reward += reward
-        self.episode_length += 1
-
         self._update_observation()
         info = {}
         if reward > 0:
             print(self.obs)
 
         if terminated or truncated:
+            episode_reward = reward
+            episode_length = N
             info["episode"] = {
-                "r": self.episode_reward,
-                "l": self.episode_length
+                "r": episode_reward,
+                "l": episode_length
             }
 
         return self.obs, reward, terminated, truncated, info

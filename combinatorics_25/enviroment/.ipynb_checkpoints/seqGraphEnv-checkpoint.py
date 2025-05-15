@@ -177,6 +177,8 @@ class SeqGraphConstructionEnv(gym.Env):
         info = {}
         
         if terminated or truncated:
+            episode_reward = reward
+            episode_length = N
             info["episode"] = {"r": episode_reward, "l": episode_length}
         
         return self.obs, reward, terminated, truncated, info
