@@ -1,7 +1,7 @@
 import gymnasium as gym
 from stable_baselines3 import PPO, DQN, A2C
 import torch
-from callbacks.modelCallback import modelCallback
+from callbacks.modelCallback import ModelCallback
 
 class Model:
     registry = {}
@@ -10,7 +10,7 @@ class Model:
         self.policy.load_state_dict(torch.load(source))
 
     def model_train(self, save_freq=1000, save_path="model.pth", timesteps=1_000_000, threshhold=0.01):
-        callback = modelCallback(save_freq, save_path, threshhold)
+        callback = ModelCallback(save_freq, save_path, threshhold)
         self.learn(total_timesteps=timesteps, callback=callback)
 
     @classmethod
