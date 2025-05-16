@@ -9,7 +9,7 @@ class Model:
     def load_weights(self, source: str):
         self.policy.load_state_dict(torch.load(source))
 
-    def model_train(self, save_freq=1000, save_path="model.pth", timesteps=1_000_000, threshhold=0.01):
+    def model_train(self, save_freq=1000, save_path="model.pth", timesteps=100_000_000, threshhold=0.01):
         callback = ModelCallback(save_freq, save_path, threshhold)
         self.learn(total_timesteps=timesteps, callback=callback)
 
