@@ -1,6 +1,6 @@
 How to run code on the cluster?
 
-1) Build the conda enviorment for the needed dependencies
+1) Build the conda environment for the needed dependencies
 -Open Terminal
 -if you are not already in this repository where this file is located, change to it
 -run "module load Anaconda3"
