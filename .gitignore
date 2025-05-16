@@ -9,3 +9,6 @@ venv
 .venv
 conda
 .conda
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints
