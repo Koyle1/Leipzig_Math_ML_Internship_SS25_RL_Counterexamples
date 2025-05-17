@@ -6,3 +6,4 @@ torch>=1.4.0
 gym>=0.17.0
 shimmy>=2.0
 scipy>=0.16
+wandb>=0.19.11

@@ -1,0 +1,16 @@
+{"time":"2025-05-17T13:26:02.24403254+02:00","level":"INFO","msg":"stream: starting","core version":"0.19.11","symlink path":"/home/sc.uni-leipzig.de/ci72buri/projects/Math_RL/Leipzig_Math_ML_Internship_SS25_RL_Counterexamples/combinatorics_25/wandb/run-20250517_132602-oneytqwh/logs/debug-core.log"}
+{"time":"2025-05-17T13:26:02.530421854+02:00","level":"INFO","msg":"created new stream","id":"oneytqwh"}
+{"time":"2025-05-17T13:26:02.530475104+02:00","level":"INFO","msg":"stream: started","id":"oneytqwh"}
+{"time":"2025-05-17T13:26:02.530576834+02:00","level":"INFO","msg":"writer: Do: started","stream_id":"oneytqwh"}
+{"time":"2025-05-17T13:26:02.530742884+02:00","level":"INFO","msg":"handler: started","stream_id":"oneytqwh"}
+{"time":"2025-05-17T13:26:02.530771094+02:00","level":"INFO","msg":"sender: started","stream_id":"oneytqwh"}
+{"time":"2025-05-17T13:26:02.755630617+02:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-05-17T13:26:02.758201054+02:00","level":"ERROR","msg":"git repo not found","error":"repository does not exist"}
+{"time":"2025-05-17T13:26:12.863294514+02:00","level":"INFO","msg":"stream: closing","id":"oneytqwh"}
+{"time":"2025-05-17T13:26:12.863464874+02:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-05-17T13:26:12.863506964+02:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-05-17T13:26:13.481249524+02:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-05-17T13:26:13.741272598+02:00","level":"INFO","msg":"handler: closed","stream_id":"oneytqwh"}
+{"time":"2025-05-17T13:26:13.741312488+02:00","level":"INFO","msg":"writer: Close: closed","stream_id":"oneytqwh"}
+{"time":"2025-05-17T13:26:13.741327098+02:00","level":"INFO","msg":"sender: closed","stream_id":"oneytqwh"}
+{"time":"2025-05-17T13:26:13.742018597+02:00","level":"INFO","msg":"stream: closed","id":"oneytqwh"}

@@ -6,6 +6,10 @@ import environment.registration
 
 import argparse
 
+#code added for wandb
+import wandb
+from wandb.integration.sb3 import WandbCallback
+
 def main():
     parser = argparse.ArgumentParser(description="Train a model.")
     parser.add_argument("--save_path", type=str, default="seq_weights.pth", help="Path to save the model")
@@ -19,6 +23,14 @@ def main():
     print("Training starts...")
     #Added aditional 
 
+    #Create wandb session
+    wandb.init(project="math_ml",
+               config={"env":args.enviroment,
+                      "algo":args.model,
+                      "seed_nr":args.seed_nr},
+               monitor_gym=True,
+               save_code=True)
+    
     seed = get_seed(args.seed_nr)
     
     env = make_vec_env(args.enviroment,
@@ -35,6 +47,9 @@ def main():
         print("Prior weight not found")
     m.model_train(save_path=args.save_path)
     m.save("ppo_graph_constructor")
+
+    #Close wandb session
+    wandb.finish()
 
 def get_seed(number: int):
     seeds= [278485391,
