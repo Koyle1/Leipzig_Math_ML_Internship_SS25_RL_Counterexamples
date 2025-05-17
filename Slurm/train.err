@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/home/sc.uni-leipzig.de/ci72buri/projects/Math_RL/Leipzig_Math_ML_Internship_SS25_RL_Counterexamples/combinatorics_25/train.py", line 10, in <module>
+    import wandb
+ModuleNotFoundError: No module named 'wandb'
+
+ERROR conda.cli.main_run:execute(124): `conda run python /home/sc.uni-leipzig.de/ci72buri/projects/Math_RL/Leipzig_Math_ML_Internship_SS25_RL_Counterexamples/combinatorics_25/train.py --enviroment SeqGraphEnv` failed. (See above for error)

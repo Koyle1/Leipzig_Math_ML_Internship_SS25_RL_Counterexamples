@@ -93,7 +93,7 @@ def jitted_calcScore(state, current_node):
         satisfies = (diam <= 5) and (evals[0] - evals[1] > 0.5)
         if satisfies:
             print("Graph satisfies conditions")
-            return 1000.0
+            return INF
         else:
             return -100.0
 
@@ -172,7 +172,7 @@ class SeqGraphConstructionEnv(gym.Env):
         reward = jitted_calcScore(self.state, self.node)
 
         self._update_observation()
-        if reward > 0:
+        if reward > 0 and self.node==N:
             print(self.obs)
         info = {}
         

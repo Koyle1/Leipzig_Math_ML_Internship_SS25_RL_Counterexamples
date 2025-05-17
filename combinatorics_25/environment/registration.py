@@ -1,11 +1,11 @@
 from gymnasium.envs.registration import register
 
 register(
-    id="GraphEnv-v0",
-    entry_point="enviroment.graphEnv:GraphConstructionEnv",
+    id="Conjuncture2-GraphEnv-v0",
+    entry_point="environment.graphEnvConjuncture2:GraphConstructionEnv",
 )
 
 register(
-    id="SeqGraphEnv-v0",
-    entry_point="enviroment.seqGraphEnv:SeqGraphConstructionEnv",    
+    id="Conjuncture2-SeqGraphEnv-v0",
+    entry_point="environment.seqGraphEnvConjuncture2:SeqGraphConstructionEnv",    
 )

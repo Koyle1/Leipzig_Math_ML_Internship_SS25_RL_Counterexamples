@@ -51,10 +51,13 @@ def bfs(Gdeg, edgeListG):
     return distMat1, conn
 
 @njit
-def jitted_calcScore(state):
+def jitted_calcScore(state, step):
     '''
         Returns the reward for the graph -> positive counterexample
     '''
+    if step != MYN:
+        return 0
+    
     adjMatG = np.zeros((N, N), dtype=np.int8)
     edgeListG = np.zeros((N, N), dtype=np.int8)
     Gdeg = np.zeros(N, dtype=np.int8)
@@ -82,6 +85,7 @@ def jitted_calcScore(state):
     ans = -(proximity + evals[int(2 * diam / 3) - 1])
     if ans > 0:
         print("Graph satisfies conditions")
+
     return ans
 
 
@@ -133,7 +137,7 @@ class GraphConstructionEnv(gym.Env):
         reward = 0
 
         if terminated:
-            reward = jitted_calcScore(self.state)
+            reward = jitted_calcScore(self.state, self.current_step)
 
         self._update_observation()
         info = {}
