@@ -1,0 +1,16 @@
+{"time":"2025-05-17T13:58:47.982515972+02:00","level":"INFO","msg":"stream: starting","core version":"0.19.11","symlink path":"/home/sc.uni-leipzig.de/ci72buri/projects/Math_RL/Leipzig_Math_ML_Internship_SS25_RL_Counterexamples/combinatorics_25/wandb/run-20250517_135847-l6z7xecy/logs/debug-core.log"}
+{"time":"2025-05-17T13:58:48.269429362+02:00","level":"INFO","msg":"created new stream","id":"l6z7xecy"}
+{"time":"2025-05-17T13:58:48.269481522+02:00","level":"INFO","msg":"stream: started","id":"l6z7xecy"}
+{"time":"2025-05-17T13:58:48.269497182+02:00","level":"INFO","msg":"handler: started","stream_id":"l6z7xecy"}
+{"time":"2025-05-17T13:58:48.269551682+02:00","level":"INFO","msg":"sender: started","stream_id":"l6z7xecy"}
+{"time":"2025-05-17T13:58:48.269576572+02:00","level":"INFO","msg":"writer: Do: started","stream_id":"l6z7xecy"}
+{"time":"2025-05-17T13:58:48.466394303+02:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-05-17T13:58:48.468906411+02:00","level":"ERROR","msg":"git repo not found","error":"repository does not exist"}
+{"time":"2025-05-17T14:03:36.784281791+02:00","level":"INFO","msg":"stream: closing","id":"l6z7xecy"}
+{"time":"2025-05-17T14:03:36.784404411+02:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-05-17T14:03:36.784459221+02:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-05-17T14:03:37.432765702+02:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-05-17T14:03:37.659062833+02:00","level":"INFO","msg":"handler: closed","stream_id":"l6z7xecy"}
+{"time":"2025-05-17T14:03:37.659107623+02:00","level":"INFO","msg":"writer: Close: closed","stream_id":"l6z7xecy"}
+{"time":"2025-05-17T14:03:37.659143553+02:00","level":"INFO","msg":"sender: closed","stream_id":"l6z7xecy"}
+{"time":"2025-05-17T14:03:37.659977922+02:00","level":"INFO","msg":"stream: closed","id":"l6z7xecy"}

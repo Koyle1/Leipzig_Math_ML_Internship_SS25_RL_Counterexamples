@@ -1,7 +1,9 @@
 import gymnasium as gym
 from stable_baselines3 import PPO, DQN, A2C
 import torch
+from stable_baselines3.common.callbacks import CallbackList
 from callbacks.modelCallback import ModelCallback
+from wandb.integration.sb3 import WandbCallback
 
 class Model:
     registry = {}
@@ -9,9 +11,14 @@ class Model:
     def load_weights(self, source: str):
         self.policy.load_state_dict(torch.load(source))
 
-    def model_train(self, save_freq=1000, save_path="model.pth", timesteps=1_000_000, threshhold=0.01):
+    def model_train(self, save_freq=1000, save_path="model.pth", timesteps=100_000_000, threshhold=0.01):
         callback = ModelCallback(save_freq, save_path, threshhold)
-        self.learn(total_timesteps=timesteps, callback=callback)
+        callbacks = CallbackList([callback,
+                                 WandbCallback(
+                                     gradient_save_freq=100,
+                                     model_save_path="./models/",
+                                     verbose=2)])
+        self.learn(total_timesteps=timesteps, callback=callbacks)
 
     @classmethod
     def register(cls, name):

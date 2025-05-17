@@ -14,10 +14,10 @@
 module load Anaconda3
 
 #Replace [YOUR USERNAME] with your username (should be the beginning of your unimail)
-source /home/sc.uni-leipzig.de/[YOUR USERNAME]/.bashrc
+source /home/sc.uni-leipzig.de/ci72buri/.bashrc
 
 #Activate conda file (make sure that you already built the conda env in advance)
 source activate math_ml
 
 #Start training by calling the trainer.py (add flags as needed)
-conda run -n math_ml python ~/projects/Math_RL/Leipzig_Math_ML_Internship_SS25_RL_Counterexamples/combinatorics_25/train.py
+conda run -n math_ml python ~/projects/Math_RL/Leipzig_Math_ML_Internship_SS25_RL_Counterexamples/combinatorics_25/train.py --enviroment SeqGraphEnv
