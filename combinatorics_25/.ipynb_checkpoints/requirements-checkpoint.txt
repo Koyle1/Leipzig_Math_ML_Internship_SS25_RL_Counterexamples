@@ -1,8 +1,0 @@
-stable-baselines3>=1.2.0
-gymnasium>=0.25.0
-numpy>=1.18.1
-numba>=0.48
-torch>=1.4.0 
-gym>=0.17.0
-shimmy>=2.0
-scipy>=0.16
