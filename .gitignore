@@ -12,3 +12,6 @@ conda
 
 # Jupyter Notebook Checkpoints
 .ipynb_checkpoints
+/combinatorics_25/wandb/
+wandb/
+Slurm/
