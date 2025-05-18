@@ -21,6 +21,7 @@ class ModelCallback(BaseCallback):
         self.found_proof = False
         self.state_save_dir = state_save_dir
         os.makedirs(self.state_save_dir, exist_ok=True)
+        self.best_graph = -10_000
 
     def _on_step(self) -> bool:
         infos = self.locals.get("infos", [])
@@ -31,11 +32,14 @@ class ModelCallback(BaseCallback):
                 self.episode_count += 1
                 reward = info["episode"]["r"]
                 length = info["episode"].get("l", None)
+                if reward > self.best_graph:
+                    self.best_graph = reward
 
                 # Log to wandb
                 wandb.log({
                     "episode_reward": reward,
-                    "episode_length": length
+                    "episode_length": length,
+                    "best_graph": self.best_graph
                 }, step=self.num_timesteps)
 
                 #Save state if reward is positive
