@@ -90,14 +90,16 @@ def jitted_calcScore(state, current_node):
     evals = -np.sort(-np.linalg.eigvalsh(distMat[:active_nodes, :active_nodes]))
 
     if active_nodes == N:
-        satisfies = (diam <= 5) and (evals[0] - evals[1] > 0.5)
-        if satisfies:
-            print("Graph satisfies conditions")
+        D = int(diam)
+        index = int(np.floor((2 * D) / 3))
+        quantity = proximity + evals[index]
+        if quantity <= 0:
+            print("Counterexample to Conjecture 2.3 found!")
             return INF
         else:
-            return -100.0
+            return -quantity  # Continue minimizing to test the boundary
 
-    shaping = -proximity + (evals[0] if evals.shape[0] > 0 else 0)
+    shaping = -(proximity + evals[0] if evals.shape[0] > 0 else 0)
     return shaping * 0.1
 
 class SeqGraphConstructionEnv(gym.Env):
