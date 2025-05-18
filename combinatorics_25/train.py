@@ -36,10 +36,13 @@ def main():
     env = make_vec_env(args.enviroment,
                        n_envs=args.n_env)
 
+    policy_kwargs = dict(net_arch=dict(pi=[128, 64, 4], vf=[128, 64, 4])) #Use custom net_arch
+    
     m = Model.create(args.model, 
                      "MlpPolicy",
                      env,
                      seed=seed,
+                     policy_kwargs=policy_kwargs, 
                      verbose=1)
     try:
         m.load_weights(source=args.save_path)
