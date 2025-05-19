@@ -27,7 +27,7 @@ def calc_score_conjecture_2_1(state, step):
     G = nx.from_numpy_array(adjMatG)
 
     if not nx.is_connected(G):
-        return -INF
+        return -60 #Reduced penalty for the sake of exploration
 
     # Largest eigenvalue of adjacency matrix
     eigenvalues = np.linalg.eigvalsh(adjMatG)

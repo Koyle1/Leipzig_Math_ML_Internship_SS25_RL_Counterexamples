@@ -40,7 +40,7 @@ class ModelCallback(BaseCallback):
                     "episode_reward": reward,
                     "episode_length": length,
                     "best_graph": self.best_graph
-                }, step=self.num_timesteps)
+                }, step=self.episode_count)
 
                 #Save state if reward is positive
                 if reward > 0 and observations is not None:
