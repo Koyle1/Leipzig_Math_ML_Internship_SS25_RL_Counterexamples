@@ -2,9 +2,13 @@ import gymnasium as gym
 from stable_baselines3 import PPO, DQN, A2C
 import torch
 from stable_baselines3.common.callbacks import CallbackList
+
 from callbacks.modelCallback import ModelCallback
 from wandb.integration.sb3 import WandbCallback
 
+import base.ModelType
+
+@ModelType.register("Normal")
 class Model:
     registry = {}
     
