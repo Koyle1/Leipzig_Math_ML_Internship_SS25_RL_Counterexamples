@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 # somewhat cumbersome original implementation
-def select_elites(states_batch, actions_batch, rewards_batch, percentile=50):
+def select_elites(states_batch, actions_batch, rewards_batch, n_sessions, percentile=50):
 	"""
 	Select states and actions from games that have rewards >= percentile
 	:param states_batch: list of lists of states, states_batch[session_i][t]
@@ -15,7 +15,7 @@ def select_elites(states_batch, actions_batch, rewards_batch, percentile=50):
 	This function was mostly taken from https://github.com/yandexdataschool/Practical_RL/blob/master/week01_intro/deep_crossentropy_method.ipynb
 	If this function is the bottleneck, it can easily be sped up using numba
 	"""
-	counter = states_batch.shape[0] * (100.0 - percentile) / 100.0
+	counter = n_sessions * (100.0 - percentile) / 100.0
 	reward_threshold = np.percentile(rewards_batch,percentile)
 
 	elite_states = []
@@ -34,13 +34,13 @@ def select_elites(states_batch, actions_batch, rewards_batch, percentile=50):
 	return elite_states, elite_actions
 
 # somewhat cumbersome original implementation
-def select_super_sessions(states_batch, actions_batch, rewards_batch, percentile=90):
+def select_super_sessions(states_batch, actions_batch, rewards_batch, n_sessions, percentile=90):
 	"""
 	Select all the sessions that will survive to the next generation
 	Similar to select_elites function
 	If this function is the bottleneck, it can easily be sped up using numba
 	"""
-	counter = states_batch.shape[0] * (100.0 - percentile) / 100.0
+	counter = n_sessions * (100.0 - percentile) / 100.0
 	reward_threshold = np.percentile(rewards_batch,percentile)
 
 	super_states = []
@@ -58,29 +58,35 @@ def select_super_sessions(states_batch, actions_batch, rewards_batch, percentile
 	super_rewards = np.array(super_rewards)
 	return super_states, super_actions, super_rewards
 
-def select_percentile(
+def select_session_percentile(
 		states,
 		actions,
 		rewards,
+		n_sessions,
 		percentile=50
 		):
 	"""
-	Pythonic version using numpy operations to do all the filtering. Replaces both of the functions above.
+	Pythonic version using numpy operations to do all the filtering. Replaces select_elites.
+	I don't yet understand select_super_sessions well enought to replace it as well.
 	"""
-	reward_threshold = np.percentile(rewards, percentile)
+	# We want to select the percentile based only on the number of session generated per generation (e.g. out of 1000)
+	# In order to use numpys convenice methods, we therefore have to recalculate our boundary.
+	# Example
+	# What percentile of n = 1200 has the same size of the 95%ile on n = 1000?, in this case 50?
+	session_based_percentile = (1 - (n_sessions * (100 - percentile) / 100) / states.shape[0]) * 100
+
+	reward_threshold = np.percentile(rewards, session_based_percentile)
 	filter_index = rewards >= reward_threshold+0.0000001
 
 	filtered_states = states[filter_index]
 	filtered_actions = actions[filter_index]
-	filtered_rewards = rewards[filter_index]
 
 	old_shape = filtered_states.shape
 	new_first_dimension = old_shape[0] * old_shape[1]
 
 	return (
 		filtered_states.reshape(new_first_dimension, old_shape[2]),
-		filtered_actions.reshape(new_first_dimension),
-		rewards
+		filtered_actions.reshape(new_first_dimension)
     )
 	
 def visualize_state_as_graph(state, n_nodes):

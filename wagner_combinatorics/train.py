@@ -23,7 +23,7 @@ import argparse
 ## Internal imports
 from src.model import get_model
 from src.environment import generate_session
-from src.util import select_percentile, select_super_sessions, RANDOM_SEEDS
+from src.util import select_session_percentile, select_super_sessions, RANDOM_SEEDS
 
 ## External parameters
 parser = argparse.ArgumentParser()
@@ -60,8 +60,6 @@ REWARD_THRESHOLD = 0
 
 INF = 1000000
 
-# TODO: All required output, correct ending criteria
-
 def train():
     tock = time.time()
     datetime_string = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
@@ -83,6 +81,11 @@ def train():
         rng = np.random.default_rng(seed=42)
     
     model = get_model(FIRST_LAYER_NEURONS, SECOND_LAYER_NEURONS, THIRD_LAYER_NEURONS, OBSERVATION_SPACE, LEARNING_RATE, verbose=args.verbose)
+
+    ## Initialize time logging
+    with open(f'out/{file_name_identifier}_iteration_runtime.csv', 'a') as f:
+        f.write("iteration,sessgen_time,randomcomp_time,select1_time,select2_time,select3_time,fit_time,score_time\n")
+        f.close()
 
     for i in range(1000000): #1000000 generations should be plenty
         #generate new sessions
@@ -106,11 +109,11 @@ def train():
         randomcomp_time = time.time()-tic 
         tic = time.time()
 
-        elite_states, elite_actions, _ = select_percentile(states_batch, actions_batch, rewards_batch, percentile=PERCENTILE) #pick the sessions to learn from
+        elite_states, elite_actions = select_session_percentile(states_batch, actions_batch, rewards_batch, n_sessions=N_SESSIONS, percentile=PERCENTILE) #pick the sessions to learn from
         select1_time = time.time()-tic
 
         tic = time.time()
-        super_sessions = select_super_sessions(states_batch, actions_batch, rewards_batch, percentile=SUPER_PERCENTILE) #pick the sessions to survive
+        super_sessions = select_super_sessions(states_batch, actions_batch, rewards_batch, n_sessions=N_SESSIONS, percentile=SUPER_PERCENTILE) #pick the sessions to survive
         select2_time = time.time()-tic
         
         tic = time.time()
@@ -138,9 +141,13 @@ def train():
         print("\n" + str(i) +  ". Best individuals: " + str(np.flip(np.sort(super_rewards))))
         if args.verbose: print("Mean reward: " + str(mean_all_reward) + "\nSessgen: " + str(sessgen_time) + ", other: " + str(randomcomp_time) + ", select1: " + str(select1_time) + ", select2: " + str(select2_time) + ", select3: " + str(select3_time) +  ", fit: " + str(fit_time) + ", score: " + str(score_time)) 
         
-        
+        # log runtime every iteration
+        with open(f'out/{file_name_identifier}_iteration_runtime.csv', 'a') as f:
+            f.write(f"{i},{sessgen_time},{randomcomp_time},{select1_time},{select2_time},{select3_time},{fit_time},{score_time}\n")
+            f.close()
+
         if (i%20 == 1): #Write all important info to files every 20 iterations
-            with open(f'out/{file_name_identifier}_best_species_pickle.pkl', 'wb') as fp:
+            with open(f'out/{file_name_identifier}_best_species.pkl', 'wb') as fp:
                 pickle.dump(super_actions, fp)
             with open(f'out/{file_name_identifier}_best_species.txt', 'w') as f:
                 for item in super_actions:
@@ -154,12 +161,9 @@ def train():
                 f.write(str(mean_all_reward)+"\n")
             with open(f'out/{file_name_identifier}_best_elite_rewards.txt', 'a') as f:
                 f.write(str(mean_best_reward)+"\n")
-            with open(f'out/{file_name_identifier}_interation_runtime.txt', 'a') as f:
-                f.write(f"{i}: {str(sessgen_time+randomcomp_time+select1_time+select2_time+select3_time+fit_time+score_time)}\n")
-        if (i%200 == 2): # To create a timeline, like in Figure 3
+        if (i > 0): # To create a timeline, like in Figure 3
             with open(f'out/{file_name_identifier}_best_species_timeline.txt', 'a') as f:
-                f.write(str(super_actions[super_rewards.index(max_reward)]))
-                f.write("\n")
+                f.write(f"{str(super_actions[super_rewards.index(max_reward)])}\n")
         
         if REWARD_THRESHOLD <= max_reward: ## Break if a solution has been found.
             soltution_state = super_states[super_rewards.index(max_reward)]
