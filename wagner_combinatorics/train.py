@@ -82,6 +82,11 @@ def train():
     
     model = get_model(FIRST_LAYER_NEURONS, SECOND_LAYER_NEURONS, THIRD_LAYER_NEURONS, OBSERVATION_SPACE, LEARNING_RATE, verbose=args.verbose)
 
+    ## Initialize time logging
+    with open(f'out/{file_name_identifier}_iteration_runtime.csv', 'a') as f:
+        f.write("iteration,sessgen_time,randomcomp_time,select1_time,select2_time,select3_time,fit_time,score_time\n")
+        f.close()
+
     for i in range(1000000): #1000000 generations should be plenty
         #generate new sessions
         #performance can be improved with joblib
@@ -136,7 +141,11 @@ def train():
         print("\n" + str(i) +  ". Best individuals: " + str(np.flip(np.sort(super_rewards))))
         if args.verbose: print("Mean reward: " + str(mean_all_reward) + "\nSessgen: " + str(sessgen_time) + ", other: " + str(randomcomp_time) + ", select1: " + str(select1_time) + ", select2: " + str(select2_time) + ", select3: " + str(select3_time) +  ", fit: " + str(fit_time) + ", score: " + str(score_time)) 
         
-        
+        # log runtime every iteration
+        with open(f'out/{file_name_identifier}_iteration_runtime.csv', 'a') as f:
+            f.write(f"{i},{sessgen_time},{randomcomp_time},{select1_time},{select2_time},{select3_time},{fit_time},{score_time}\n")
+            f.close()
+
         if (i%20 == 1): #Write all important info to files every 20 iterations
             with open(f'out/{file_name_identifier}_best_species.pkl', 'wb') as fp:
                 pickle.dump(super_actions, fp)
@@ -152,12 +161,9 @@ def train():
                 f.write(str(mean_all_reward)+"\n")
             with open(f'out/{file_name_identifier}_best_elite_rewards.txt', 'a') as f:
                 f.write(str(mean_best_reward)+"\n")
-            with open(f'out/{file_name_identifier}_interation_runtime.txt', 'a') as f:
-                f.write(f"{i}: {str(sessgen_time+randomcomp_time+select1_time+select2_time+select3_time+fit_time+score_time)}\n")
-        if (i%200 == 2): # To create a timeline, like in Figure 3
+        if (i > 0): # To create a timeline, like in Figure 3
             with open(f'out/{file_name_identifier}_best_species_timeline.txt', 'a') as f:
-                f.write(str(super_actions[super_rewards.index(max_reward)]))
-                f.write("\n")
+                f.write(f"{str(super_actions[super_rewards.index(max_reward)])}\n")
         
         if REWARD_THRESHOLD <= max_reward: ## Break if a solution has been found.
             soltution_state = super_states[super_rewards.index(max_reward)]
