@@ -166,10 +166,10 @@ def train():
                 f.write(f"{str(super_actions[super_rewards.index(max_reward)])}\n")
         
         if REWARD_THRESHOLD <= max_reward: ## Break if a solution has been found.
-            soltution_state = super_states[super_rewards.index(max_reward)]
+            solution_state = super_states[super_rewards.index(max_reward)]
             with open(f'out/{file_name_identifier}_solution.txt', 'w') as f:
                 f.write("Solution state:\n")
-                f.write(str(soltution_state))
+                f.write(f"{solution_state}")
                 f.write(f"\nSolution reward: {max_reward}\n")
                 f.write(f"Generations needed: {N_SESSIONS*i}\n")
                 f.write(f"Total runtime: {str(time.time()-tock)}")
