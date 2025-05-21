@@ -173,7 +173,7 @@ def train():
                 f.write(f"\nSolution reward: {max_reward}\n")
                 f.write(f"Generations needed: {N_SESSIONS*i}\n")
                 f.write(f"Total runtime: {str(time.time()-tock)}")
-            model.save_weights('out/{file_name_identifier}_best_policy.pkl')
+            model.save_weights(f'out/{file_name_identifier}_best_policy.pkl')
             print("Solution found!")
             break
 
