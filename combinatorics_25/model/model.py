@@ -6,9 +6,9 @@ from stable_baselines3.common.callbacks import CallbackList
 from callbacks.modelCallback import ModelCallback
 from wandb.integration.sb3 import WandbCallback
 
-import base.ModelType
+#import base.ModelType
 
-@ModelType.register("Normal")
+#@ModelType.register("Normal")
 class Model:
     registry = {}
     

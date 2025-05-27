@@ -1,7 +1,6 @@
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
 from model.model import Model
-from model.explors import ExplorerModel
 import gymnasium as gym
 import environment.registration
 
@@ -15,7 +14,7 @@ def main():
     parser = argparse.ArgumentParser(description="Train a model.")
     parser.add_argument("--save_path", type=str, default="seq_weights.pth", help="Path to save the model")
     parser.add_argument("--seed_nr", type=int, default=0, help="Choose a seed between [0-19]")
-    parser.add_argument("--enviroment", type=str, default="Conjuncture1-GraphEnv-v0", help="Choose an enviorment")
+    parser.add_argument("--enviroment", type=str, default="Conjuncture2-GraphEnv-v0", help="Choose an enviorment")
     parser.add_argument("--model", type=str, default="PPO", help="Choose an algorithm")
     parser.add_argument("--n_env", type=int, default=4, help="number of parallel enviroments")
     
@@ -39,10 +38,11 @@ def main():
 
     policy_kwargs = dict(net_arch=dict(pi=[128, 64, 4], vf=[128, 64, 4])) #Use custom net_arch
     
-    m = ExplorerModel(args.model, 
+    m = Model.create(args.model, 
+                     "MlpPolicy",
                      env,
                      seed=seed,
-                     #policy_kwargs=policy_kwargs, 
+                     policy_kwargs=policy_kwargs, 
                      verbose=1)
     try:
         m.load_weights(source=args.save_path)

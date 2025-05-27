@@ -100,6 +100,7 @@ class GraphConstructionEnv(gym.Env):
         
         self.observation_space = spaces.Box(low=0, high=1, shape=(OBSERVATION_SPACE,), dtype=np.int8)
         self.action_space = spaces.Discrete(2)  # binary: 0 or 1
+        self.MYN = MYN
 
         self.episode_reward = 0
         self.episode_length = 0

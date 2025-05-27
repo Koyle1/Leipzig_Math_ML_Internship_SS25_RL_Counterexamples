@@ -11,7 +11,7 @@ MYN = int(N * (N - 1) / 2)
 INF = 1_000_000
 OBSERVATION_SPACE = MYN * 2  # state + one-hot position
 
-def calc_score_conjecture_2_1(state, step):
+def calc_score_conjecture_2_1(state, step, penalty):
     if step != MYN:
         return 0
 
@@ -27,7 +27,7 @@ def calc_score_conjecture_2_1(state, step):
     G = nx.from_numpy_array(adjMatG)
 
     if not nx.is_connected(G):
-        return -60 #Reduced penalty for the sake of exploration
+        return penalty #Reduced penalty for the sake of exploration
         #TBA - Bonus for exploration (agent often gets stuck in local minima due to high penalty for not beining connected)
 
     # Largest eigenvalue of adjacency matrix
@@ -57,6 +57,10 @@ class GraphConstructionEnv(gym.Env):
 
         self.episode_reward = 0
         self.episode_length = 0
+
+        self.MYN = MYN
+
+        self.average = -22
 
         self.reset()
 
@@ -90,7 +94,12 @@ class GraphConstructionEnv(gym.Env):
         reward = 0
 
         if terminated:
-            reward = calc_score_conjecture_2_1(self.state, self.current_step)
+            reward = calc_score_conjecture_2_1(self.state, self.current_step, self.average)
+            if self.average == -22:
+                self.average = reward
+            else:
+                self.average = 0.1 * reward + 0.9 * self.average
+                
 
         self._update_observation()
         info = {}
