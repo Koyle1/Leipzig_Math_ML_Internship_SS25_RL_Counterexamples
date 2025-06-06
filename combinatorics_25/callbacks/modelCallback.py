@@ -7,8 +7,8 @@ from stable_baselines3.common.callbacks import BaseCallback
 class ModelCallback(BaseCallback):
     def __init__(
         self,
-        save_freq: int,
-        save_path: str,
+        save_freq: int = 1000,
+        save_path: str = "model.pth",
         threshold: float = None,
         verbose: int = 0,
         state_save_dir: str = "./saved_states"

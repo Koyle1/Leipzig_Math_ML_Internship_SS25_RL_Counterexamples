@@ -14,3 +14,13 @@ register(
     id="Conjecture1-GraphEnv-v0",
     entry_point="environment.graphEnvConjuncture1:GraphConstructionEnv",
 )
+
+register(
+    id="Conjecture1-GraphEnvPE-v0",
+    entry_point="environment.graphEnvConjuncture1PE:GraphConstructionEnv",
+)
+
+register(
+    id="Conjecture1-GraphEnvOHE-v0",
+    entry_point="environment.graphEnvConjuncture1OHE:GraphConstructionEnv",
+)

@@ -28,7 +28,6 @@ def calc_score_conjecture_2_1(state, step, penalty):
 
     if not nx.is_connected(G):
         return penalty #Reduced penalty for the sake of exploration
-        #TBA - Bonus for exploration (agent often gets stuck in local minima due to high penalty for not beining connected)
 
     # Largest eigenvalue of adjacency matrix
     eigenvalues = np.linalg.eigvalsh(adjMatG)
