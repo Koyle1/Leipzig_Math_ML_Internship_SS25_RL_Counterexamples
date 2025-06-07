@@ -24,3 +24,18 @@ register(
     id="Conjecture1-GraphEnvOHE-v0",
     entry_point="environment.graphEnvConjuncture1OHE:GraphConstructionEnv",
 )
+
+register(
+    id="c1-graphNodeBuildEnv-v0",
+    entry_point="environment.graphNodeBuildEnv:GraphNodeBuildEnv",
+)
+
+register(
+    id="c1-graphNodeBuildPE-v0",
+    entry_point="environment.graphNodeBuildPE:GraphNodeBuildEnv",
+)
+
+register(
+    id="c1-graphNodeBuildPEseq-v0",
+    entry_point="environment.graphNodeBuildPEseq:GraphNodeBuildEnv",
+)
