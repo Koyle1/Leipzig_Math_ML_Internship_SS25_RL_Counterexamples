@@ -22,7 +22,7 @@ def main():
     parser = argparse.ArgumentParser(description="Train a model.")
     parser.add_argument("--save_path", type=str, default="seq_weights.pth", help="Path to save the model")
     parser.add_argument("--seed_nr", type=int, default=0, help="Choose a seed between [0-19]")
-    parser.add_argument("--enviroment", type=str, default="c1-graphNodeBuildPEseq-v0", help="Choose an enviorment")
+    parser.add_argument("--enviroment", type=str, default="c2-graphNodeBuildPEseqB-v0", help="Choose an enviorment")
     parser.add_argument("--model", type=str, default="PPO", help="Choose an algorithm")
     parser.add_argument("--n_env", type=int, default=4, help="number of parallel enviroments")
     

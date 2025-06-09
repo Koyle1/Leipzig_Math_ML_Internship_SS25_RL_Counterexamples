@@ -15,8 +15,27 @@ import numpy as np
 import math
 import datetime
 from math import log1p
+from scipy.linalg import eigh
 
-def calc_reward_nx(G: nx.Graph, penalty: float = 0.0, save_dir: str = "saved_states"):
+def boundary_function(boundary: float = 0.0, fielder_score: float = 0.0):
+    return np.exp(fboundary - fielder_score)
+
+def fiedler_value_path_graph(N):
+    # Create a path graph with N nodes
+    G = nx.path_graph(N)
+    
+    # Get the Laplacian matrix (as a dense NumPy array)
+    L = nx.laplacian_matrix(G).toarray()
+    
+    # Compute all eigenvalues of the Laplacian
+    eigenvalues = eigh(L, eigvals_only=True)
+    
+    # Sort eigenvalues to get the second smallest (Fiedler value)
+    fiedler_val = sorted(eigenvalues)[1]
+    
+    return fiedler_val
+
+def calc_reward_nx(G: nx.Graph, fiedler_score: dict[int, float], penalty: float = 0.0, save_dir: str = "saved_states"):
     N_graph = G.number_of_nodes()
     if N_graph < 4:
         return 0
@@ -29,23 +48,22 @@ def calc_reward_nx(G: nx.Graph, penalty: float = 0.0, save_dir: str = "saved_sta
     lap_eigvals = np.linalg.eigvalsh(L)
     fiedler_value = lap_eigvals[1]
 
-    if lambda_1 == 0.0:
-        return 0
+    boundary = boundary_function(fiedler_score[N_graph], fiedler_value)
+    alpha = 1
 
-    if fiedler_value == 0.0:
-        return -10
-
+    if fiedler_score <
+    
     try:
         mu = len(nx.max_weight_matching(G, maxcardinality=True))
     except Exception:
         mu = 0
 
-    reward = math.sqrt(N_graph - 1) + 1 - lambda_1 - mu + log1p(1 + fiedler_value)
+    reward = math.sqrt(N_graph - 1) + 1 - lambda_1 - mu - alpha * boundary
     
-    if (math.sqrt(N_graph - 1) + 1 - lambda_1 - mu) > 0 and N_graph == N:
+    if (math.sqrt(N_graph - 1) + 1 - lambda_1 - mu) > 0 and N_graph > 3 and fiedler_value > 0.0:
         reward = 10
 
-    if reward == 10 and save_dir is not None and N_graph == N:
+    if reward > 0 and fiedler_value > 0.0 and N_graph > 4:
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"{save_dir}/graph_reward_{reward:.3f}_n{N}_e{G.number_of_edges()}_{timestamp}.graphml"
         nx.write_graphml(G, filename)
@@ -80,7 +98,12 @@ class GraphNodeBuildEnv(gym.Env):
         self.max_reward = -np.inf
         self.cumulative_reward = 0.0
         self._update_observation()
+        
+        self.min_fiedler = [0.0] * (N + 1)
 
+        for i in range(2, N + 1):
+            self.min_fiedler[i] = fiedler_value_path_graph(i)
+         
     def seed(self, seed=None):
         np.random.seed(seed)
         random.seed(seed)
@@ -138,11 +161,11 @@ class GraphNodeBuildEnv(gym.Env):
                 obs_tensor = torch.tensor(self.obs, dtype=torch.float32).unsqueeze(0).to(self.device)
                 reward = self.surrogate_model(obs_tensor).item()
         else:
-            reward = calc_reward_nx(self.graph, self.penalty)
+            reward = calc_reward_nx(self.graph, fiedler_score = self.min_fiedler)
 
         self.cumulative_reward += reward
 
-        if reward > 900_000:
+        if reward == 10:
             terminated = True
 
         # Track max reward but only after step 4 (i.e., current_node >= 4)

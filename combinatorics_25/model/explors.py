@@ -67,7 +67,9 @@ class ExplorerModel:
         self.optimizer = optim.Adam(self.intrinsic_model.parameters(), lr=1e-3)
         self.bonus_tracker = BonusTracker()
 
-        callback = ModelCallback()
+        callback = ModelCallback(
+            threshold=9.9,
+        )
         self.callbacks = CallbackList([callback,
                                  WandbCallback(
                                      gradient_save_freq=100,

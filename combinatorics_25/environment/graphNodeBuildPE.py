@@ -71,16 +71,7 @@ class GraphNodeBuildEnv(gym.Env):
         np.random.seed(seed)
         random.seed(seed)
 
-    def reset(self, *, seed=None, options=None):
-        if seed is not None:
-            self.seed(seed)
-
-        self.graph = nx.Graph()
-        self.graph.add_node(0)
-        self.current_node = 1
-        self.current_edge_idx = 0
-        self._update_observation()
-        return self.obs, {}
+    
 
     def _update_observation(self):
         # Step 1: Create padded N x N adjacency matrix
@@ -97,6 +88,18 @@ class GraphNodeBuildEnv(gym.Env):
         # Step 3: Concatenate into final observation
         self.obs = np.concatenate([adj_flat, node_scalar, edge_scalar])  # Final shape: (363,)
 
+    def reset(self, *, seed=None, options=None):
+        if seed is not None:
+            self.seed(seed)
+
+        self.graph = nx.Graph()
+        self.graph.add_node(0)
+        self.current_node = 1
+        self.current_edge_idx = 0
+        self.average = -22
+        self._update_observation()
+        return self.obs, {}
+
     def step(self, action):
         assert self.action_space.contains(action)
 
@@ -108,6 +111,7 @@ class GraphNodeBuildEnv(gym.Env):
             self.current_edge_idx += 1
 
             if self.current_edge_idx == self.current_node:
+                # Done adding edges for this node, move to next
                 self.graph.add_node(self.current_node)
                 self.current_node += 1
                 self.current_edge_idx = 0
@@ -115,13 +119,16 @@ class GraphNodeBuildEnv(gym.Env):
         terminated = self.current_node == N
         truncated = False
 
-        # Reward for each partial graph
-        if self.use_surrogate and self.surrogate_model is not None:
-            with torch.no_grad():
-                obs_tensor = torch.tensor(self.obs, dtype=torch.float32).unsqueeze(0).to(self.device)
-                reward = self.surrogate_model(obs_tensor).item()
+        if terminated:
+            # Calculate reward only at the end of the episode
+            if self.use_surrogate and self.surrogate_model is not None:
+                with torch.no_grad():
+                    obs_tensor = torch.tensor(self.obs, dtype=torch.float32).unsqueeze(0).to(self.device)
+                    reward = self.surrogate_model(obs_tensor).item()
+            else:
+                reward = calc_reward_nx(self.graph, self.penalty)
         else:
-            reward = calc_reward_nx(self.graph, self.penalty)
+            reward = 0.0  # Intermediate steps get no reward
 
         self.average = reward if self.average == -22 else 0.1 * reward + 0.9 * self.average
 
@@ -131,11 +138,13 @@ class GraphNodeBuildEnv(gym.Env):
         if terminated:
             info["episode"] = {
                 "r": reward,
-                "l": self.current_node,
-                "average": self.average
+                "l": N,
+                "average": self.average,
             }
+            info["final_step_reward"] = reward  # This is key for your callback
 
         return self.obs, reward, terminated, truncated, info
+
 
     def render(self, mode="human"):
         print(f"Step: Node {self.current_node}, Edge {self.current_edge_idx}")
