@@ -284,9 +284,6 @@ class GraphNodeBuildEnv(gym.Env):
         self.alpha = 1.0
         self.beta = 1.0
 
-        # Values to be saved
-        self.last_reward = -100
-
         for i in range(2, N + 1):
             self.min_fiedler[i] = fiedler_value_path_graph(i)
          
@@ -306,7 +303,6 @@ class GraphNodeBuildEnv(gym.Env):
         self.cumulative_reward = 0.0
         self.average = -22
         self._update_observation()
-        self.last_reward = -100
         
         return self.obs, {}
 
@@ -349,7 +345,7 @@ class GraphNodeBuildEnv(gym.Env):
                 obs_tensor = torch.tensor(self.obs, dtype=torch.float32).unsqueeze(0).to(self.device)
                 reward = self.surrogate_model(obs_tensor).item()
         else:
-            self.alpha, self.beta, reward,true_reward = calc_reward_nx(self.graph, fiedler_score = self.min_fiedler, end_of_note=(self.current_edge_idx == self.current_node), alpha=self.alpha, beta=self.beta, last_reward = self.last_reward)
+            self.alpha, self.beta, reward,true_reward = calc_reward_nx(self.graph, fiedler_score = self.min_fiedler, end_of_note=terminated, alpha=self.alpha, beta=self.beta)
 
         self.cumulative_reward += reward
 

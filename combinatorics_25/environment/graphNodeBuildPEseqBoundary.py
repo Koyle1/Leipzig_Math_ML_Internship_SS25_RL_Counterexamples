@@ -10,6 +10,8 @@ N = 19
 MAX_EDGES = int(N * (N - 1) / 2)
 OBSERVATION_SIZE = N * N + 2  # adjacency matrix + current_node_scalar + edge_index_scalar
 
+alpha = 1
+
 import networkx as nx
 import numpy as np
 import math
@@ -48,10 +50,11 @@ def calc_reward_nx(G: nx.Graph, fiedler_score: dict[int, float], penalty: float 
     lap_eigvals = np.linalg.eigvalsh(L)
     fiedler_value = lap_eigvals[1]
 
+    alpha = 1.0
     boundary = boundary_function(fiedler_score[N_graph], fiedler_value)
-    alpha = 1
+    
     if fiedler_value < 0.000000000001:
-        alpha += 0.01
+        alpha += 0.05
 
     try:
         mu = len(nx.max_weight_matching(G, maxcardinality=True))

@@ -38,6 +38,9 @@ class ModelCallback(BaseCallback):
                 # Final step reward explicitly added by environment
                 final_step_reward = info.get("final_step_reward", None)
                 final_graph_reward = info.get("final_graph_reward", None)
+                alpha = info.get("alpha", 0.0)
+                beta = info.get("beta", 0.0)
+                true_reward = info.get("true_reward", 0.0)
 
                 length = info["episode"].get("l", None)
 
@@ -61,6 +64,16 @@ class ModelCallback(BaseCallback):
 
                 if final_graph_reward is not None:
                     log_dict["episode_reward_final_step"] = final_step_reward
+
+                if alpha > 0.0:
+                    log_dict["alpha"] = alpha
+
+                if beta > 0.0:
+                    log_dict["beta"] = beta
+
+                log_dict["true_reward"] = true_reward
+
+                
 
                 wandb.log(log_dict, step=self.episode_count)
 
