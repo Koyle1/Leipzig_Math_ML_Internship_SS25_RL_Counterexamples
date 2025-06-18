@@ -4,12 +4,13 @@ import gymnasium as gym
 from gymnasium import spaces
 import networkx as nx
 import random
+import torch
 
 # Constants
 N = 19
 MYN = int(N * (N - 1) / 2)
 INF = 1_000_000
-OBSERVATION_SPACE = MYN * 2  # state + one-hot position
+OBSERVATION_SPACE = MYN * 3  # state + one-hot position + one-hot step index
 
 def calc_score_conjecture_2_1(state, step, penalty):
     if step != MYN:
@@ -18,7 +19,7 @@ def calc_score_conjecture_2_1(state, step, penalty):
     adjMatG = np.zeros((N, N), dtype=np.int8)
     count = 0
     for i in range(N):
-        for j in range(i+1, N):
+        for j in range(i + 1, N):
             if state[count] == 1:
                 adjMatG[i][j] = 1
                 adjMatG[j][i] = 1
@@ -27,7 +28,7 @@ def calc_score_conjecture_2_1(state, step, penalty):
     G = nx.from_numpy_array(adjMatG)
 
     if not nx.is_connected(G):
-        return penalty #Reduced penalty for the sake of exploration
+        return penalty  # Reduced penalty for the sake of exploration
 
     # Largest eigenvalue of adjacency matrix
     eigenvalues = np.linalg.eigvalsh(adjMatG)
@@ -42,25 +43,33 @@ def calc_score_conjecture_2_1(state, step, penalty):
 
 
 class GraphConstructionEnv(gym.Env):
-    """Environment for combinatorial graph construction for Conjecture 2.1"""
+    """Environment for combinatorial graph construction for Conjecture 2.1, with surrogate model support."""
 
     metadata = {"render.modes": ["human"]}
 
-    def __init__(self, render_mode=None, **kwargs):
+    def __init__(self, render_mode=None, use_surrogate=False, surrogate_model=None, **kwargs):
         super(GraphConstructionEnv, self).__init__()
 
         self.render_mode = render_mode
+        self.use_surrogate = use_surrogate
+        self.surrogate_model = surrogate_model  # PyTorch model (optional)
 
-        self.observation_space = spaces.Box(low=0, high=1, shape=(OBSERVATION_SPACE,), dtype=np.int8)
+        self.observation_space = spaces.Box(
+            low=0,
+            high=1,
+            shape=(OBSERVATION_SPACE,),
+            dtype=np.int8
+        )
+
         self.action_space = spaces.Discrete(2)  # binary: 0 or 1
 
         self.episode_reward = 0
         self.episode_length = 0
 
         self.MYN = MYN
+        self.average = -22  # Running average used for penalty fallback
 
-        self.average = -22
-
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.reset()
 
     def seed(self, seed=None):
@@ -77,11 +86,12 @@ class GraphConstructionEnv(gym.Env):
         return self.obs, info
 
     def _update_observation(self):
-        # Observation = [state (MYN), one-hot position (MYN)]
         position = np.zeros(MYN, dtype=np.int8)
+        step_one_hot = np.zeros(MYN, dtype=np.int8)
         if self.current_step < MYN:
             position[self.current_step] = 1
-        self.obs = np.concatenate([self.state, position])
+            step_one_hot[self.current_step] = 1
+        self.obs = np.concatenate([self.state, position, step_one_hot])
 
     def step(self, action):
         assert self.action_space.contains(action), "Invalid action"
@@ -93,15 +103,22 @@ class GraphConstructionEnv(gym.Env):
         reward = 0
 
         if terminated:
-            reward = calc_score_conjecture_2_1(self.state, self.current_step, self.average)
+            if self.use_surrogate and self.surrogate_model is not None:
+                with torch.no_grad():
+                    obs_tensor = torch.tensor(self.obs, dtype=torch.float32).unsqueeze(0).to(self.device)
+                    reward = self.surrogate_model(obs_tensor).item()
+            else:
+                reward = calc_score_conjecture_2_1(self.state, self.current_step, self.average)
+
+            # Update moving average for exploration penalty
             if self.average == -22:
                 self.average = reward
             else:
                 self.average = 0.1 * reward + 0.9 * self.average
-                
 
         self._update_observation()
         info = {}
+
         if reward > 0:
             print(self.obs)
 

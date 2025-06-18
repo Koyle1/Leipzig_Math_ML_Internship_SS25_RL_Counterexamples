@@ -2,91 +2,43 @@ from abc import ABC, abstractmethod
 import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
-from numba import njit
+import networkx as nx
 import random
 
-    
-
-# Constants (same as in original code)
-N = 30
+# Constants
+N = 19
 MYN = int(N * (N - 1) / 2)
-DECISIONS = MYN
-OBSERVATION_SPACE = 2 * MYN
-INF = 1000000
+INF = 1_000_000
+OBSERVATION_SPACE = MYN * 2 + 1  # state + one-hot position + current step index
 
-@njit
-def bfs(Gdeg, edgeListG):
-    '''
-        Calculates shortest path matrix
-    '''
-    distMat1 = np.zeros((N, N))
-    conn = True
-    for s in range(N):
-        visited = np.zeros(N, dtype=np.int8)
-        myQueue = np.zeros(N, dtype=np.int8)
-        dist = np.zeros(N, dtype=np.int8)
-        startInd = 0
-        endInd = 0
-
-        myQueue[endInd] = s
-        endInd += 1
-        visited[s] = 1
-
-        while endInd > startInd:
-            pivot = myQueue[startInd]
-            startInd += 1
-            for i in range(Gdeg[pivot]):
-                if visited[edgeListG[pivot][i]] == 0:
-                    myQueue[endInd] = edgeListG[pivot][i]
-                    dist[edgeListG[pivot][i]] = dist[pivot] + 1
-                    endInd += 1
-                    visited[edgeListG[pivot][i]] = 1
-
-        if endInd < N:
-            conn = False
-
-        for i in range(N):
-            distMat1[s][i] = dist[i]
-
-    return distMat1, conn
-
-@njit
-def jitted_calcScore(state, step, penalty):
-    '''
-        Returns the reward for the graph -> positive counterexample
-    '''
+def calc_score_conjecture_2_1(state, step, penalty):
     if step != MYN:
         return 0
-    
+
     adjMatG = np.zeros((N, N), dtype=np.int8)
-    edgeListG = np.zeros((N, N), dtype=np.int8)
-    Gdeg = np.zeros(N, dtype=np.int8)
     count = 0
     for i in range(N):
         for j in range(i+1, N):
             if state[count] == 1:
                 adjMatG[i][j] = 1
                 adjMatG[j][i] = 1
-                edgeListG[i][Gdeg[i]] = j
-                edgeListG[j][Gdeg[j]] = i
-                Gdeg[i] += 1
-                Gdeg[j] += 1
             count += 1
 
-    distMat, conn = bfs(Gdeg, edgeListG)
-    if not conn:
-        return penalty
+    G = nx.from_numpy_array(adjMatG)
 
-    diam = np.amax(distMat)
-    sumLengths = np.sum(distMat, axis=0)
-    evals = -np.sort(-np.linalg.eigvalsh(distMat))
-    proximity = np.amin(sumLengths) / (N - 1.0)
+    if not nx.is_connected(G):
+        return -INF #penalty  # Reduced penalty for the sake of exploration
 
-    ans = -(proximity + evals[int(2 * diam / 3) - 1])
-    if ans > 0:
-        print("Graph satisfies conditions")
+    # Largest eigenvalue of adjacency matrix
+    eigenvalues = np.linalg.eigvalsh(adjMatG)
+    lambda_1 = eigenvalues[-1]
 
-    return ans
+    # Maximum matching size (matching number)
+    matching = nx.max_weight_matching(G, maxcardinality=True)
+    mu = len(matching)
+
+    reward = -(lambda_1 + mu)
+    return reward
 
 
 class GraphConstructionEnv(gym.Env):
@@ -99,14 +51,19 @@ class GraphConstructionEnv(gym.Env):
 
         self.render_mode = render_mode
 
-        self.observation_space = spaces.Box(low=0, high=1, shape=(OBSERVATION_SPACE,), dtype=np.int8)
+        self.observation_space = spaces.Box(
+            low=0,
+            high=MYN,
+            shape=(OBSERVATION_SPACE,),
+            dtype=np.int32
+        )
+
         self.action_space = spaces.Discrete(2)  # binary: 0 or 1
 
         self.episode_reward = 0
         self.episode_length = 0
 
         self.MYN = MYN
-
         self.average = -22
 
         self.reset()
@@ -125,11 +82,12 @@ class GraphConstructionEnv(gym.Env):
         return self.obs, info
 
     def _update_observation(self):
-        # Observation = [state (MYN), one-hot position (MYN)]
+        # Observation = [state (MYN), one-hot position (MYN), current step (int)]
         position = np.zeros(MYN, dtype=np.int8)
         if self.current_step < MYN:
             position[self.current_step] = 1
-        self.obs = np.concatenate([self.state, position])
+        step_index = np.array([self.current_step], dtype=np.int32)
+        self.obs = np.concatenate([self.state.astype(np.int32), position.astype(np.int32), step_index])
 
     def step(self, action):
         assert self.action_space.contains(action), "Invalid action"
@@ -141,12 +99,11 @@ class GraphConstructionEnv(gym.Env):
         reward = 0
 
         if terminated:
-            reward = jitted_calcScore(self.state, self.current_step, self.average)
+            reward = calc_score_conjecture_2_1(self.state, self.current_step, self.average)
             if self.average == -22:
                 self.average = reward
             else:
                 self.average = 0.1 * reward + 0.9 * self.average
-                
 
         self._update_observation()
         info = {}
