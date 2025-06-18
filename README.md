@@ -53,16 +53,16 @@ Evaluation of approaches over 20 runs having defined random seeds.
 
 Conjecture 1:
 
-| Approach | Success rate | Avg. sample efficiency | Avg. time till counterexample is found | Stability over 1-3
-|-------------|-------------|
+| Approach | Success rate | Avg. sample efficiency | Avg. time till counterexample is found | Stability over 1-3 |
+|-------------|-------------|-------------|-------------|-------------|
 | Wagner | | | | 
-| AMCS | 100% | 12.90 steps | 1.30s | Variance efficiency: 0.09; Variance time: 0.004
+| AMCS | 100% | 12.90 steps | 1.30s | Variance efficiency: 0.09; Variance time: 0.004 |
 
 Conjecture 2: 
 
-| Approach | Success rate | Avg. sample efficiency | Avg. time till counterexample is found | Stability over 1-3
-|-------------|-------------|
-| Wagner | | | |
-| AMCS | |
+| Approach | Success rate | Avg. sample efficiency | Avg. time till counterexample is found | Stability over 1-3 |
+|-------------|-------------|-------------|-------------|-------------|
+| Wagner | | | | |
+| AMCS | | | | |
 
 
