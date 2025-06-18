@@ -6,12 +6,10 @@ Wagner showed that reinforcement learning can be used to generate constructions 
 For that, he used the *cross-entropy method*. 
 In this project, we:
 
-- reproduced and improved Wagner's code on efficiency and modularity
+- reproduced and improved Wagner's code on efficiency
+- implemented an RL approach based on PPO (Proximal Policy Optimization) and natural graph building
 - implemented new evaluation metrics
-- explored alternative RL algorithms (e.g., PPO)
-- compared the results with Adaptive Monte Carlo Search (Vito & Stefanus, 2023)
-
-(add whatever else we're about to do :D)
+- compared the results with Wagner's approach and Adaptive Monte Carlo Search (Vito & Stefanus, 2023)
 
 ## Wagner's Approach
 
@@ -51,5 +49,20 @@ Can we improve on the graph representation as a flattened adjacency matrix?
 
 ## Our results
 
+Evaluation of approaches over 20 runs having defined random seeds.
+
+Conjecture 1:
+
+| Approach | Success rate | Avg. sample efficiency | Avg. time till counterexample is found | Stability over 1-3
+|-------------|-------------|
+| Wagner | | | | 
+| AMCS | 100% | 12.90 steps | 1.30s | Variance efficiency: 0.09; Variance time: 0.004
+
+Conjecture 2: 
+
+| Approach | Success rate | Avg. sample efficiency | Avg. time till counterexample is found | Stability over 1-3
+|-------------|-------------|
+| Wagner | | | |
+| AMCS | |
 
 
