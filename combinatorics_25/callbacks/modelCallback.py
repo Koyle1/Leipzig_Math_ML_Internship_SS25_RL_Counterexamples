@@ -3,6 +3,8 @@ import torch
 import numpy as np
 import wandb
 from stable_baselines3.common.callbacks import BaseCallback
+from collections import deque                       
+
 
 class ModelCallback(BaseCallback):
     def __init__(
@@ -116,3 +118,91 @@ class ModelCallback(BaseCallback):
             print(f"[Callback] Training stopped early due to counterexample / proof.")
         else:
             print(f"[Callback] No proof found during training.")
+
+
+
+
+class LagrangeMultiplierCallback(ModelCallback):
+    """
+    Adaptive Lagrange multiplier (dual‑gradient ascent) + all bookkeeping of ModelCallback.
+    Keeps the constraint  E[P] ≤ p_max  satisfied online.
+    """
+
+    def __init__(
+        self,
+        p_max: float = 0.05,
+        lr_lambda: float = 0.05,
+        window: int = 1024,
+        lambda_update_freq: int = 1_000,
+        # --- pass‑through kwargs for ModelCallback ---
+        save_freq: int = 1000,
+        save_path: str = "model.pth",
+        threshold: float | None = None,
+        verbose: int = 0,
+        state_save_dir: str = "./saved_states",
+    ):
+        # let the parent initialise everything it needs
+        super().__init__(
+            save_freq=save_freq,
+            save_path=save_path,
+            threshold=threshold,
+            verbose=verbose,
+            state_save_dir=state_save_dir,
+        )
+
+        # parameters specific to the dual update
+        self.p_max               = p_max
+        self.lr_lambda           = lr_lambda
+        self.lambda_update_freq  = lambda_update_freq
+        self.running_P           = deque(maxlen=window)  # short moving window
+
+    # --------------------------------------------------------------------- #
+    # Every env step:   1) update λ  2) run the usual ModelCallback logic
+    # --------------------------------------------------------------------- #
+    def _on_step(self) -> bool:
+        infos = self.locals.get("infos", [])
+
+        # ------------------------------------------------------------
+        # ❶  Collect P only when the node is finished AND the graph is
+        #    disconnected (signalled by lambda_2 == 0 or an explicit flag).
+        #    Otherwise treat P as zero for the dual update.
+        # ------------------------------------------------------------
+        for info in infos:
+            if info.get("end_of_note"):                     # finished node
+                # If your env already gives a boolean flag, use it:
+                #   disconnected = not info.get("is_connected", True)
+                # Otherwise infer from λ₂ :
+                disconnected = info.get("lambda_2", 0.0) < 1e-12
+
+                if disconnected and "P" in info:
+                    self.running_P.append(info["P"])
+                else:
+                    self.running_P.append(0.0)              # no penalty
+
+        # ------------------------------------------------------------
+        # ❷  Dual‑gradient ascent on λ (unchanged)
+        # ------------------------------------------------------------
+        if self.n_calls % self.lambda_update_freq == 0 and self.running_P:
+            mean_P = float(np.mean(self.running_P))
+
+            envs = getattr(self, "training_env", None)
+            if envs is not None:
+                cur_lambda = envs.envs[0].unwrapped.lambda_dual
+                new_lambda = max(
+                    0.0,
+                    cur_lambda + self.lr_lambda * (mean_P - self.p_max),
+                )
+                for e in envs.envs:
+                    e.unwrapped.lambda_dual = new_lambda
+
+                if self.verbose:
+                    print(
+                        f"[Lagrange] step={self.n_calls:>8}  "
+                        f"mean_P={mean_P:.4f}  λ→{new_lambda:.4f}"
+                    )
+
+        # ------------------------------------------------------------
+        # ❸  Call parent callback and propagate stop signal
+        # ------------------------------------------------------------
+        continue_training = super()._on_step()
+        return continue_training

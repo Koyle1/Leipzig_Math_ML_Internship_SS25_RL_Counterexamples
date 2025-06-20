@@ -6,7 +6,7 @@ import random
 import torch
 
 # Constants
-N = 30
+N = 300
 MAX_EDGES = int(N * (N - 1) / 2)
 OBSERVATION_SIZE = N * N + 2  # adjacency matrix + current_node_scalar + edge_index_scalar
 
@@ -20,6 +20,7 @@ from math import log1p
 from scipy.linalg import eigh
 from scipy.sparse.linalg import eigsh
 from scipy.sparse import csgraph
+from scipy.sparse.csgraph import floyd_warshall
 
 import os
 
@@ -42,204 +43,74 @@ def fiedler_value_path_graph(N):
     
     return fiedler_val
 
-'''
-def calc_reward_nx(G: nx.Graph, fiedler_score: dict[int, float], penalty: float = 0.0, save_dir: str = "saved_states_c2", end_of_note: bool = False):
-    N_graph = G.number_of_nodes()
-    if N_graph < 4:
-        return 0.0
-
-    try:
-        # Laplacian eigenvalues
-        L = nx.laplacian_matrix(G).astype(float).todense()
-        lap_eigvals = np.linalg.eigvalsh(L)
-        fiedler_value = lap_eigvals[1]
-    except np.linalg.LinAlgError:
-        return -5.0
-
-    try:
-        dist_matrix = nx.floyd_warshall_numpy(G)
-        dist_matrix += 1e-6 * np.eye(N_graph)  # Regularization
-
-        avg_dists = np.sum(dist_matrix, axis=1) / (N_graph - 1)
-        proximity = np.min(avg_dists)
-
-        dist_eigvals = eigh(dist_matrix, eigvals_only=True)
-        dist_eigvals = np.sort(dist_eigvals)[::-1]
-
-        D = nx.diameter(G)
-        k = min(math.floor(2 * D / 3), len(dist_eigvals) - 1)
-        partial_eig = dist_eigvals[k]
-    except Exception:
-        return -5.0  # Gracefully degrade if eigs fail
-
-    # Use provided fiedler bound or 0.0 if missing
-    min_fied = fiedler_score[N_graph]
-    boundary = boundary_function(min_fied, fiedler_value)
-
-    alpha = 1.0
-    if fiedler_value < 1e-12 and end_of_note:
-        alpha += 0.05
-
-    reward = - (proximity + partial_eig) - alpha * boundary
-
-    if reward > 1e-6 and fiedler_value > 1e-12:
-        reward = 10
-
-    if reward == 10 and save_dir and N_graph > 4:
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"{save_dir}/graph_reward_{reward:.3f}_n{N_graph}_e{G.number_of_edges()}_{timestamp}.graphml"
-        nx.write_graphml(G, filename)
-
-    return reward
-'''
-
-
-#Version 2
-
-'''
-def safe_fiedler_value(L, N_graph):
-    try:
-        if N_graph >= 6:
-            # Use sparse eigsh for speed
-            lap_eigvals = eigsh(L, k=2, which='SM', return_eigenvectors=False)
-            return float(sorted(lap_eigvals)[1])
-        else:
-            # Fallback to full dense eigval
-            lap_dense = L.toarray()
-            lap_eigvals = np.linalg.eigvalsh(lap_dense)
-            return float(sorted(lap_eigvals)[1])
-    except Exception:
-        return None
 
 def calc_reward_nx(
     G: nx.Graph,
-    fiedler_score: dict[int, float],
-    penalty: float = 0.0,
-    save_dir: str = "saved_states_c2",
-    end_of_note: bool = False
-):
-    N_graph = G.number_of_nodes()
-    if N_graph < 4:
-        return 0.0
-
-    # --- Fiedler value ---
-    try:
-        L = nx.laplacian_matrix(G).astype(float)
-        fiedler_value = safe_fiedler_value(L, N_graph)
-        if fiedler_value is None:
-            return -5.3
-    except Exception:
-        return -5.1
-
-    # --- Distance-based features ---
-    try:
-        dist_matrix = nx.floyd_warshall_numpy(G)
-        dist_matrix += 1e-6 * np.eye(N_graph)
-
-        avg_dists = np.sum(dist_matrix, axis=1) / (N_graph - 1)
-        proximity = np.min(avg_dists)
-
-        dist_eigvals = eigh(dist_matrix, eigvals_only=True)
-        dist_eigvals = np.sort(dist_eigvals)[::-1]
-
-        D = nx.diameter(G)
-        k = min(math.floor(2 * D / 3), len(dist_eigvals) - 1)
-        partial_eig = dist_eigvals[k]
-    except Exception:
-        return -5.2
-
-    # --- Reward Calculation ---
-    min_fied = fiedler_score[N_graph]
-    boundary = boundary_function(min_fied, fiedler_value)
-
-    alpha = 1.0
-    if fiedler_value < 1e-12 and end_of_note:
-        alpha += 0.05
-
-    reward = - (proximity + partial_eig) - alpha * boundary
-
-    if reward > 1e-6 and fiedler_value > 1e-12:
-        reward = 10
-
-    if reward == 10 and save_dir and N_graph > 4:
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"{save_dir}/graph_reward_{reward:.3f}_n{N_graph}_e{G.number_of_edges()}_{timestamp}.graphml"
-        nx.write_graphml(G, filename)
-
-    return reward
-'''
-
-# Version 3
-
-def soft_boundary_transition(x, threshold=1e-6, sharpness=100.0):
-    # Smooth transition from 0 to 1 around threshold
-    return 1 / (1 + np.exp(-sharpness * (x - threshold)))
-
-def calc_reward_nx(
-    G: nx.Graph,
+    action,
     fiedler_score: dict[int, float],
     penalty: float = 0.0,
     save_dir: str = "saved_states_c2",
     end_of_note: bool = False,
     alpha: float = 1.0,
     beta: float = 1.0,
+    last_reward: float = -20.0, 
 ):
-    
-    
     N_graph = G.number_of_nodes()
     if N_graph < 4:
         return alpha, beta, 0.0, 0.0
 
+    if not end_of_note and action < 0.1:
+        return alpha, beta, last_reward,last_reward
+    
     if not nx.is_connected(G):
-        # Smooth penalty for disconnected graphs
-        if end_of_note:
-            alpha += 0.01
-    
-        return alpha, beta, -15, -100
+        return (alpha, beta, last_reward, last_reward) if not end_of_note else (alpha, beta, -15, -100)
 
-    
+    # --- Fiedler Value ---
+    try:
+        L = nx.laplacian_matrix(G).astype(float)
+        eigvals = eigsh(L, k=2, which="SM", return_eigenvectors=False)
+        fiedler_value = eigvals[1] if eigvals.size > 1 else 0.0
+    except Exception:
+        return alpha, beta, last_reward, last_reward
 
-    # Laplacian Fiedler value (2 smallest eigenvalues)
-    L = nx.laplacian_matrix(G).astype(float)
-    eigvals = eigsh(L, k=2, which="SM", return_eigenvectors=False)
-    fiedler_value = eigvals[1] if eigvals.size > 1 else 0.0
+    # --- Approximate Proximity ---
+    try:
+        dists = dict(nx.all_pairs_shortest_path_length(G))
+        avg_dists = [np.mean(list(lengths.values())) for lengths in dists.values()]
+        proximity = min(avg_dists)
+    except Exception:
+        proximity = float('inf')
 
-    # Distance matrix from adjacency
-    adj_matrix = nx.adjacency_matrix(G)
-    dist_matrix = csgraph.floyd_warshall(adj_matrix, directed=False)
-    '''
-    if np.isinf(dist_matrix).any():
-        return alpha, beta, -np.tanh(N_graph / 2.0) * beta, -np.tanh(N_graph / 2.0) * beta
-    '''
+    # --- Partial Eigenvalue ---
+    try:
+        root = next(iter(G.nodes))
+        ecc = nx.single_source_shortest_path_length(G, root)
+        D = max(ecc.values())
+    except Exception:
+        D = 1
 
-    np.fill_diagonal(dist_matrix, 1e-6)  # Regularization
+    partial_eig = 0.0
+    if D >= 3 and N_graph >= 8:
+        try:
+            A = nx.adjacency_matrix(G)
+            D_sparse = csgraph.floyd_warshall(A, directed=False)
+            dist_eigvals = np.linalg.eigvalsh(D_sparse.toarray())
+            k = min(math.floor(2 * D / 3), len(dist_eigvals) - 1)
+            partial_eig = dist_eigvals[-(k + 1)] if k >= 0 else 0.0
+        except Exception:
+            partial_eig = 0.0
 
-    avg_dists = dist_matrix.sum(axis=1) / (N_graph - 1)
-    proximity = np.min(avg_dists)
-
-    # Eigenvalues of distance matrix
-    dist_eigvals = eigh(dist_matrix, eigvals_only=True)
-    dist_eigvals = np.sort(dist_eigvals)[::-1]
-
-    D = nx.diameter(G)
-    k = min(math.floor(2 * D / 3), len(dist_eigvals) - 1)
-    partial_eig = dist_eigvals[k] if k >= 0 else 0.0
-
-    # Boundary penalty (could use e.g. quadratic loss)
+    # --- Reward ---
     min_fied = fiedler_score[N_graph]
     boundary = np.exp(fiedler_value - min_fied)
 
-    reward = - (proximity + partial_eig) - (4 - 3 * np.exp(-alpha)) * boundary
-
     true_reward = - (proximity + partial_eig)
-
-    # Soft transition to high reward if base_reward is good and fiedler is non-zero
-    
+    reward = true_reward - (4 - 3 * np.exp(-alpha)) * boundary
 
     if true_reward > 0:
         reward = 1000.0
 
-    # Optional save
+    # --- Save Graph ---
     if reward > 999.0 and save_dir and N_graph > 4:
         os.makedirs(save_dir, exist_ok=True)
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -247,6 +118,7 @@ def calc_reward_nx(
         nx.write_graphml(G, filename)
 
     return alpha, beta, reward, true_reward
+
 
 
 class GraphNodeBuildEnv(gym.Env):
@@ -284,6 +156,8 @@ class GraphNodeBuildEnv(gym.Env):
         self.alpha = 1.0
         self.beta = 1.0
 
+        self.last_reward = -20
+
         for i in range(2, N + 1):
             self.min_fiedler[i] = fiedler_value_path_graph(i)
          
@@ -303,6 +177,7 @@ class GraphNodeBuildEnv(gym.Env):
         self.cumulative_reward = 0.0
         self.average = -22
         self._update_observation()
+        self.last_reward = 20
         
         return self.obs, {}
 
@@ -345,7 +220,7 @@ class GraphNodeBuildEnv(gym.Env):
                 obs_tensor = torch.tensor(self.obs, dtype=torch.float32).unsqueeze(0).to(self.device)
                 reward = self.surrogate_model(obs_tensor).item()
         else:
-            self.alpha, self.beta, reward,true_reward = calc_reward_nx(self.graph, fiedler_score = self.min_fiedler, end_of_note=terminated, alpha=self.alpha, beta=self.beta)
+            self.alpha, self.beta, reward, true_reward = calc_reward_nx(self.graph, action = action, fiedler_score = self.min_fiedler, end_of_note=terminated, alpha=self.alpha, beta=self.beta)
 
         self.cumulative_reward += reward
 
@@ -378,6 +253,8 @@ class GraphNodeBuildEnv(gym.Env):
             # Reset for next episode
             self.max_reward = -np.inf
             self.cumulative_reward = 0.0
+
+        self.last_reward = reward
 
         return self.obs, reward, terminated, truncated, info
 

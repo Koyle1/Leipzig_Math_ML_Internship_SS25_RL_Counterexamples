@@ -51,3 +51,18 @@ register(
     id="c2-graphNodeBuildPEseqB-v0",
     entry_point="environment.graphNodeBuildPEseqBoundary_C2:GraphNodeBuildEnv",
 )
+
+register(
+    id="c2-graphNodeBuildPEseqBoae-v0",
+    entry_point="environment.graphNodeBuildPEseqBoundary_C2_oae:GraphNodeBuildEnv",
+)
+
+register(
+    id="graphNodeBuildPEseqBoundaryDD-v0",
+    entry_point="environment.graphNodeBuildPEseqBoundaryDD:GraphNodeBuildEnv",
+)
+
+register(
+    id="graphNodeBuildPEseqBoundaryOAE-v0",
+    entry_point="environment.graphNodeBuildPEseqBoundaryOAE:GraphNodeBuildEnv",
+)

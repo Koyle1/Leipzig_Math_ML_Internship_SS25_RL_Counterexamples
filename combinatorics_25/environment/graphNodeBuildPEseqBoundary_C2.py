@@ -20,6 +20,7 @@ from math import log1p
 from scipy.linalg import eigh
 from scipy.sparse.linalg import eigsh
 from scipy.sparse import csgraph
+from scipy.sparse.csgraph import floyd_warshall
 
 import os
 

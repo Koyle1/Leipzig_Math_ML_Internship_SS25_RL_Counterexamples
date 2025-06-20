@@ -1,0 +1,13 @@
+#!/bin/bash
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=6
+#SBATCH --mem=128G
+#SBATCH --job-name=train
+#SBATCH --partition=clara
+#SBATCH --time=48:00:00  # max running time
+
+module load Anaconda3
+
+source activate math_ml
+
+conda run -n math_ml python ~/projects/Math_RL/Leipzig_Math_ML_Internship_SS25_RL_Counterexamples/combinatorics_25/train_explorer.py --seed_nr 5

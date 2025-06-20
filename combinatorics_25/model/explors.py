@@ -52,19 +52,30 @@ class BonusTracker:
 
 # --- Explorer Model with EXPLORS logic ---
 class ExplorerModel:
-    def __init__(self, env, seed, model_name="PPO", buffer_size=50):
+    def __init__(self, env, seed, model_name="PPO", buffer_size=50, n_graphs_for_training=10, N=19, activate_intrinsic_model = True):
         self.env = env
-        self.horizon = 171
+        self.horizon = int(N * (N - 1) / 2)
         self.buffer = deque(maxlen=buffer_size)  # FIFO buffer
         self.step_counter = 0
 
         obs_dim = env.observation_space.shape[0]
         act_dim = env.action_space.n
+        self.intrinsic_status = activate_intrinsic_model
 
-        self.model = Model.create(model_name, "MlpPolicy", seed=seed, env=env, verbose=0)
+        self.model = Model.create(model_name,
+                                  "MlpPolicy",
+                                  seed=seed,
+                                  env=env,
+                                  n_steps=self.horizon * 2,
+                                  batch_size=self.horizon * 2, 
+                                  verbose=0,
+                                 )
+        if activate_intrinsic_model:
+            self.intrinsic_model = IntrinsicRewardModel(obs_dim, act_dim).to("cpu")
+            self.optimizer = optim.Adam(self.intrinsic_model.parameters(), lr=1e-3)         
+        else:
+            self.intrinsic_model = None
 
-        self.intrinsic_model = IntrinsicRewardModel(obs_dim, act_dim).to("cpu")
-        self.optimizer = optim.Adam(self.intrinsic_model.parameters(), lr=1e-3)
         self.bonus_tracker = BonusTracker()
 
         callback = ModelCallback(
@@ -82,15 +93,22 @@ class ExplorerModel:
         with torch.no_grad():
             return self.intrinsic_model(obs_tensor, action_tensor).item()
 
-    def model_train(self, total_timesteps=1_000_000_000, intrinsic_coeff=0.2, update_policy_every=342, update_intrinsic_every=171):
+    def model_train(self, total_timesteps=1_000_000_000, intrinsic_coeff=0.2):
         obs = self.env.reset()
         trajectory = []
+        update_policy_every=self.horizon * 2
+        update_intrinsic_every=self.horizon * 4
 
         for step in range(1, total_timesteps + 1):
             action, _ = self.model.predict(obs, deterministic=False)
             new_obs, reward, done, info = self.env.step(action)
-            intrinsic_bonus = self.bonus_tracker.get_bonus(new_obs[0],done[0])
-            intrinsic_reward = self.compute_intrinsic_reward(obs[0], action[0])
+            if self.intrinsic_status:
+                intrinsic_bonus = self.bonus_tracker.get_bonus(new_obs[0],done[0])
+                intrinsic_reward = self.compute_intrinsic_reward(obs[0], action[0])
+            else:
+                intrinsic_bonus = 0
+                intrinsic_reward = 0
+            
             total_reward = reward[0] + intrinsic_coeff * (intrinsic_reward + intrinsic_bonus)
 
             self.bonus_tracker.update([new_obs[0]])
@@ -111,7 +129,7 @@ class ExplorerModel:
                 self.model.learn(total_timesteps=update_policy_every, callback=self.callbacks)
 
             # --- Intrinsic Reward Model Update ---
-            if step % update_intrinsic_every == 0:
+            if self.intrinsic_status and step % update_intrinsic_every == 0:
                 print(f"Step {step}: Intrinsic Model Update")
                 self.update_intrinsic_model()
 

@@ -22,9 +22,9 @@ def main():
     parser = argparse.ArgumentParser(description="Train a model.")
     parser.add_argument("--save_path", type=str, default="seq_weights.pth", help="Path to save the model")
     parser.add_argument("--seed_nr", type=int, default=0, help="Choose a seed between [0-19]")
-    parser.add_argument("--enviroment", type=str, default="c2-graphNodeBuildPEseqB-v0", help="Choose an enviorment")
+    parser.add_argument("--enviroment", type=str, default="c2-graphNodeBuildPEseqBoae-v0", help="Choose an enviorment")
     parser.add_argument("--model", type=str, default="PPO", help="Choose an algorithm")
-    parser.add_argument("--n_env", type=int, default=4, help="number of parallel enviroments")
+    parser.add_argument("--n_env", type=int, default=6, help="number of parallel enviroments")
     
     args = parser.parse_args()
     
@@ -49,7 +49,11 @@ def main():
     
     m = ExplorerModel(model_name=args.model,
                      env=env,
-                     seed=seed)
+                     seed=seed,
+                     n_graphs_for_training=2,
+                     N=50, # Die eignetliche Anzahl ist 300, aber für Speicher ist die Konfiguration besser
+                     activate_intrinsic_model = False,
+                     )
     try:
         m.load_weights(source=args.save_path)
     except:
