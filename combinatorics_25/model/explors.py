@@ -1,10 +1,8 @@
-import gym
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from stable_baselines3 import PPO
 from collections import defaultdict, deque
 
 from model.model import Model  # Custom model factory
