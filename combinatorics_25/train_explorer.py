@@ -2,21 +2,15 @@ import os
 os.environ['WANDB_DIR'] = '/tmp/wandb_logs'
 os.environ['WANDB_SAVE_CODE'] = 'false'
 os.environ['WANDB_DISABLE_CODE'] = 'true'
-os.environ['WANDB_SAVE_CODE'] = 'false'
 os.environ['WANDB_CONSOLE'] = 'off'        # kein CLI-Output speichern
 
-from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
-from model.model import Model
 from model.explors import ExplorerModel
-import gymnasium as gym
-import environment.registration
 
 import argparse
 
 #code added for wandb
 import wandb
-from wandb.integration.sb3 import WandbCallback
 
 def main():
     parser = argparse.ArgumentParser(description="Train a model.")
@@ -44,8 +38,6 @@ def main():
     
     env = make_vec_env(args.enviroment,
                        n_envs=args.n_env)
-
-    policy_kwargs = dict(net_arch=dict(pi=[128, 64, 4], vf=[128, 64, 4])) #Use custom net_arch
     
     m = ExplorerModel(model_name=args.model,
                      env=env,
