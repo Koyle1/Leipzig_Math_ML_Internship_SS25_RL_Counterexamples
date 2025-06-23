@@ -7,6 +7,8 @@ os.environ['WANDB_CONSOLE'] = 'off'        # kein CLI-Output speichern
 from stable_baselines3.common.env_util import make_vec_env
 from model.explors import ExplorerModel
 
+import environment.registration
+
 import argparse
 
 #code added for wandb
