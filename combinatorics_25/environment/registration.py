@@ -40,11 +40,14 @@ register(
     entry_point="environment.graphNodeBuildPEseq:GraphNodeBuildEnv",
 )
 
-
-
 register(
     id="c1-graphNodeBuildPEseqB-v0",
     entry_point="environment.graphNodeBuildPEseqBoundary:GraphNodeBuildEnv",
+)
+
+register(
+    id="c1-graphNodeBuildPEseqBRONE-v0",
+    entry_point="environment.graphNodeBuildPEseqBoundaryNewRewardOnlyOnNewEdge:GraphNodeBuildEnv",
 )
 
 register(
