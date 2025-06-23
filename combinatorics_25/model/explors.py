@@ -65,10 +65,10 @@ class ExplorerModel:
         self.optimizer = optim.Adam(self.intrinsic_model.parameters(), lr=1e-3)
         self.bonus_tracker = BonusTracker()
 
-        callback = ModelCallback(
+        self.callback = ModelCallback(
             threshold=9.9,
         )
-        self.callbacks = CallbackList([callback,
+        self.callbacks = CallbackList([self.callback,
                                  WandbCallback(
                                      gradient_save_freq=100,
                                      model_save_path="./models/",
@@ -113,6 +113,10 @@ class ExplorerModel:
                 print(f"Step {step}: Intrinsic Model Update")
                 self.update_intrinsic_model()
 
+            # --- Cancel on solution found ---
+            if self.callback.found_proof: 
+                print("Solution found. Stopping training.")
+                break
             # Log
             #print(f"[{step}] R: {reward[0]:.2f} | IntR: {intrinsic_reward:.4f} | Bonus: {intrinsic_bonus:.4f} | Total: {total_reward:.4f}")
 
