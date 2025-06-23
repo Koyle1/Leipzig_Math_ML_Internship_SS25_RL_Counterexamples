@@ -1,10 +1,8 @@
-import gym
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from stable_baselines3 import PPO
 from collections import defaultdict, deque
 
 from model.model import Model  # Custom model factory
@@ -52,11 +50,12 @@ class BonusTracker:
 
 # --- Explorer Model with EXPLORS logic ---
 class ExplorerModel:
-    def __init__(self, env, seed, model_name="PPO", buffer_size=50):
+    def __init__(self, env, seed, model_name="PPO", buffer_size=50, stop_on_solution=False):
         self.env = env
         self.horizon = 171
         self.buffer = deque(maxlen=buffer_size)  # FIFO buffer
         self.step_counter = 0
+        self.stop_on_solution = stop_on_solution
 
         obs_dim = env.observation_space.shape[0]
         act_dim = env.action_space.n
@@ -67,10 +66,10 @@ class ExplorerModel:
         self.optimizer = optim.Adam(self.intrinsic_model.parameters(), lr=1e-3)
         self.bonus_tracker = BonusTracker()
 
-        callback = ModelCallback(
+        self.callback = ModelCallback(
             threshold=9.9,
         )
-        self.callbacks = CallbackList([callback,
+        self.callbacks = CallbackList([self.callback,
                                  WandbCallback(
                                      gradient_save_freq=100,
                                      model_save_path="./models/",
@@ -115,6 +114,10 @@ class ExplorerModel:
                 print(f"Step {step}: Intrinsic Model Update")
                 self.update_intrinsic_model()
 
+            # --- Stop training on solution found ---
+            if self.callback.found_proof and self.stop_on_solution: 
+                print("Solution found. Stopping training.")
+                break
             # Log
             #print(f"[{step}] R: {reward[0]:.2f} | IntR: {intrinsic_reward:.4f} | Bonus: {intrinsic_bonus:.4f} | Total: {total_reward:.4f}")
 

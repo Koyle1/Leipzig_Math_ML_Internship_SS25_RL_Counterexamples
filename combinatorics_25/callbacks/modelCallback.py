@@ -27,7 +27,7 @@ class ModelCallback(BaseCallback):
 
     def _on_step(self) -> bool:
         infos = self.locals.get("infos", [])
-        observations = self.locals.get("obs")
+        observations = self.locals.get("new_obs")
 
         for i, info in enumerate(infos):
             if "episode" in info:
