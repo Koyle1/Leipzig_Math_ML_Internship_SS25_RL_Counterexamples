@@ -78,6 +78,10 @@ class ModelCallback(BaseCallback):
                 wandb.log(log_dict, step=self.episode_count)
 
                 # Save state if final step reward is positive and best so far
+                print(f"""final_step_reward={final_step_reward} is not None
+                      and final_step_reward={final_step_reward} > 0
+                      and final_step_reward={final_step_reward} >= self.best_graph_final_step={self.best_graph_final_step}
+                      and observations={observations} is not None""")
                 if (
                     final_step_reward is not None 
                     and final_step_reward > 0 
