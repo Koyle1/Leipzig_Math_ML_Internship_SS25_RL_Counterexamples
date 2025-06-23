@@ -51,6 +51,11 @@ register(
 )
 
 register(
+    id="c1-graphNodeBuildPEseqBRONN-v0",
+    entry_point="environment.graphNodeBuildPEseqBoundaryNewRewardOnlyOnNewNode:GraphNodeBuildEnv",
+)
+
+register(
     id="c2-graphNodeBuildPEseqB-v0",
     entry_point="environment.graphNodeBuildPEseqBoundary_C2:GraphNodeBuildEnv",
 )
