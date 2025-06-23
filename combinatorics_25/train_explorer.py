@@ -21,6 +21,7 @@ def main():
     parser.add_argument("--enviroment", type=str, default="c2-graphNodeBuildPEseqB-v0", help="Choose an enviorment")
     parser.add_argument("--model", type=str, default="PPO", help="Choose an algorithm")
     parser.add_argument("--n_env", type=int, default=4, help="number of parallel enviroments")
+    parser.add_argument("--stop_on_solution", type=bool, default=False, help="stop the training once a solution is found")
     
     args = parser.parse_args()
     
@@ -43,7 +44,8 @@ def main():
     
     m = ExplorerModel(model_name=args.model,
                      env=env,
-                     seed=seed)
+                     seed=seed,
+                     stop_on_solution=args.stop_on_solution)
     try:
         m.load_weights(source=args.save_path)
     except:

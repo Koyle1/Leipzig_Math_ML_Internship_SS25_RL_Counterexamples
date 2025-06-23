@@ -50,11 +50,12 @@ class BonusTracker:
 
 # --- Explorer Model with EXPLORS logic ---
 class ExplorerModel:
-    def __init__(self, env, seed, model_name="PPO", buffer_size=50):
+    def __init__(self, env, seed, model_name="PPO", buffer_size=50, stop_on_solution=False):
         self.env = env
         self.horizon = 171
         self.buffer = deque(maxlen=buffer_size)  # FIFO buffer
         self.step_counter = 0
+        self.stop_on_solution = stop_on_solution
 
         obs_dim = env.observation_space.shape[0]
         act_dim = env.action_space.n
@@ -113,8 +114,8 @@ class ExplorerModel:
                 print(f"Step {step}: Intrinsic Model Update")
                 self.update_intrinsic_model()
 
-            # --- Cancel on solution found ---
-            if self.callback.found_proof: 
+            # --- Stop training on solution found ---
+            if self.callback.found_proof and self.stop_on_solution: 
                 print("Solution found. Stopping training.")
                 break
             # Log
