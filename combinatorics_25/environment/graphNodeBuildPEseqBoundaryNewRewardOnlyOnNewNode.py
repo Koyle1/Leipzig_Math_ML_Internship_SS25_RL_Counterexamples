@@ -146,26 +146,24 @@ class GraphNodeBuildEnv(gym.Env):
             self.current_edge_idx += 1
 
             if self.current_edge_idx == self.current_node:
+                # Recalculate reward before adding the new node    
+                if self.use_surrogate and self.surrogate_model is not None:
+                    with torch.no_grad():
+                        obs_tensor = torch.tensor(self.obs, dtype=torch.float32).unsqueeze(0).to(self.device)
+                        reward = self.surrogate_model(obs_tensor).item()
+                else:
+                    reward = calc_reward_nx(self.graph, fiedler_score = self.min_fiedler)
+                self.previous_reward = reward
+
+                # Add node and reset edge counter.
                 self.graph.add_node(self.current_node)
                 self.current_node += 1
                 self.current_edge_idx = 0
+            else: # return previous reward if no new node is added
+                reward = self.previous_reward
 
         terminated = self.current_node == N
         truncated = False
-
-        # Recalculate the reward only when all edges are added to the current node.
-        # This is the case when the edge index is reset to 0
-        if self.current_edge_idx == 0:
-            if self.use_surrogate and self.surrogate_model is not None:
-                with torch.no_grad():
-                    obs_tensor = torch.tensor(self.obs, dtype=torch.float32).unsqueeze(0).to(self.device)
-                    reward = self.surrogate_model(obs_tensor).item()
-            else:
-                reward = calc_reward_nx(self.graph, fiedler_score = self.min_fiedler)
-
-            self.previous_reward = reward
-        else:
-            reward = self.previous_reward
 
         self.cumulative_reward += reward
 
