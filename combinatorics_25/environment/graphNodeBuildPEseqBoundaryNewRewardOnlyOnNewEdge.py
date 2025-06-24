@@ -22,11 +22,23 @@ from scipy.linalg import eigh
 def boundary_function(boundary: float = 0.0, fielder_score: float = 0.0):
     return np.exp(boundary - fielder_score)
 
+
+def calc_fiedler_value(G):
+    """Calculate the Fiedler value (algebraic connectivity)
+    using numpys eigvalsh function on the Laplacian. This appears to be faster than nx'
+    integrated function.
+    """
+    L = nx.laplacian_matrix(G).astype(float).todense()
+    lap_eigvals = np.linalg.eigvalsh(L)
+    fiedler_val = lap_eigvals[1]
+    
+    return fiedler_val
+
 def fiedler_value_path_graph(N):
     # Create a path graph with N nodes
     G = nx.path_graph(N)
     
-    return nx.algebraic_connectivity(G)
+    return calc_fiedler_value(G)
 
 def calc_reward_nx(G: nx.Graph, fiedler_score: dict[int, float], penalty: float = 0.0, save_dir: str = "saved_states"):
     # All small float values used for numerical stability.
@@ -38,7 +50,7 @@ def calc_reward_nx(G: nx.Graph, fiedler_score: dict[int, float], penalty: float 
     adj_eigvals = np.linalg.eigvalsh(A) #sorted list of eigenvalues
     lambda_1 = adj_eigvals[-1] if len(adj_eigvals) > 0 else 0.0
 
-    fiedler_value = nx.algebraic_connectivity(G)
+    fiedler_value = calc_fiedler_value(G)
 
     alpha = 1.0
     boundary = boundary_function(fiedler_score[N_graph], fiedler_value)
