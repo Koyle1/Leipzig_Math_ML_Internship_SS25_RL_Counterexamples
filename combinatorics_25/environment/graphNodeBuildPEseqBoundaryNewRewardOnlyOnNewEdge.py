@@ -134,6 +134,14 @@ class GraphNodeBuildEnv(gym.Env):
         # Step 3: Concatenate into final observation
         self.obs = np.concatenate([adj_flat, node_scalar, edge_scalar])  # Final shape: (363,)
 
+    def _recalculate_reward(self):
+        if self.use_surrogate and self.surrogate_model is not None:
+            with torch.no_grad():
+                obs_tensor = torch.tensor(self.obs, dtype=torch.float32).unsqueeze(0).to(self.device)
+                return self.surrogate_model(obs_tensor).item()
+        else:
+            return calc_reward_nx(self.graph, fiedler_score = self.min_fiedler)
+
     def step(self, action):
         assert self.action_space.contains(action)
 
@@ -145,19 +153,20 @@ class GraphNodeBuildEnv(gym.Env):
                 self.graph.add_edge(self.current_node, target_node)
 
                 # Recalculate reward if a new edge has been added   
-                if self.use_surrogate and self.surrogate_model is not None:
-                    with torch.no_grad():
-                        obs_tensor = torch.tensor(self.obs, dtype=torch.float32).unsqueeze(0).to(self.device)
-                        reward = self.surrogate_model(obs_tensor).item()
-                else:
-                    reward = calc_reward_nx(self.graph, fiedler_score = self.min_fiedler)
-                    self.previous_reward = reward
+                reward = self._recalculate_reward()
+                self.previous_reward = reward
             else: # Otherwise return the previous reward
                 reward = self.previous_reward
 
             self.current_edge_idx += 1
 
             if self.current_edge_idx == self.current_node:
+                # Always recalculate the reward at the end of a node to discourage fully disconnected nodes
+                # The reward is already calculated for the graph if action == 1
+                if action != 1:
+                    reward = self._recalculate_reward()
+                    self.previous_reward = reward
+                
                 self.graph.add_node(self.current_node)
                 self.current_node += 1
                 self.current_edge_idx = 0
