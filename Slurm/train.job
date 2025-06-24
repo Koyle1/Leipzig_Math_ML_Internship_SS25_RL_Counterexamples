@@ -1,0 +1,17 @@
+#!/bin/bash
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=10
+#SBATCH --mem=128G
+#SBATCH --job-name=train
+#SBATCH --partition=clara
+#SBATCH --time=48:00:00
+#SBATCH --array=0-19%20                      # Run all 20 jobs in parallel
+#SBATCH --output=logs/train_%A_%a.out
+#SBATCH --error=logs/train_%A_%a.err
+
+module load Anaconda3
+source activate math_ml
+
+SEED_NR=$SLURM_ARRAY_TASK_ID
+
+conda run -n math_ml python ~/projects/Math_RL/Leipzig_Math_ML_Internship_SS25_RL_Counterexamples/combinatorics_25/train_explorer.py --seed_nr $SEED_NR  --environment
