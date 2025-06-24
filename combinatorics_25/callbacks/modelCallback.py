@@ -8,18 +8,16 @@ class ModelCallback(BaseCallback):
     def __init__(
         self,
         save_freq: int = 1000,
-        save_path: str = "model.pth",
         threshold: float = None,
         verbose: int = 0,
-        state_save_dir: str = "./saved_states"
+        save_dir: str = "./training_run_logs"
     ):
         super().__init__(verbose)
         self.save_freq = save_freq
-        self.save_path = save_path
         self.threshold = threshold
         self.episode_count = 0
         self.found_proof = False
-        self.state_save_dir = state_save_dir
+        self.save_dir = save_dir
         os.makedirs(self.state_save_dir, exist_ok=True)
 
         self.best_graph_cumulative = -10_000
@@ -86,8 +84,8 @@ class ModelCallback(BaseCallback):
                 ):
                     state = observations[i] if isinstance(observations, (list, np.ndarray)) else observations
                     state_path = os.path.join(
-                        self.state_save_dir,
-                        f"state_ep{self.episode_count}_finalrew{final_step_reward:.2f}.npy"
+                        self.save_dir,
+                        f"states/state_ep{self.episode_count}_finalrew{final_step_reward:.2f}.npy"
                     )
                     np.save(state_path, state)
                     if self.verbose:
@@ -97,6 +95,11 @@ class ModelCallback(BaseCallback):
                 if self.threshold is not None and final_step_reward is not None and final_step_reward >= self.threshold:
                     print(f"\n[Callback] Counterexample / proof found! Final step reward = {final_step_reward}")
                     print(f"[Callback] Saving model to {self.save_path}")
+                    model_path = os.path.join(
+                        self.save_dir,
+                        f"models/model.pth"
+                    )
+
                     torch.save(self.model.policy.state_dict(), self.save_path)
                     self.found_proof = True
                     return False

@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import os
 
 from collections import defaultdict, deque
 
@@ -50,7 +51,7 @@ class BonusTracker:
 
 # --- Explorer Model with EXPLORS logic ---
 class ExplorerModel:
-    def __init__(self, env, seed, model_name="PPO", buffer_size=50, stop_on_solution=False):
+    def __init__(self, env, seed, model_name="PPO", buffer_size=50, stop_on_solution=False, log_dir="./training_run_logs"):
         self.env = env
         self.horizon = 171
         self.buffer = deque(maxlen=buffer_size)  # FIFO buffer
@@ -68,11 +69,12 @@ class ExplorerModel:
 
         self.callback = ModelCallback(
             threshold=9.9,
+            save_dir=log_dir
         )
         self.callbacks = CallbackList([self.callback,
                                  WandbCallback(
                                      gradient_save_freq=100,
-                                     model_save_path="./models/",
+                                     model_save_path= os.path.join(log_dir, "models"),
                                      verbose=2)])
 
     def compute_intrinsic_reward(self, obs, action):
