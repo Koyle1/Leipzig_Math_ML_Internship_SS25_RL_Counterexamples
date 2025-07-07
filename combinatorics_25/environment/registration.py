@@ -51,6 +51,11 @@ register(
 )
 
 register(
+    id="c1-graphNodeBuildPEseqBRONEfullAdj-v0",
+    entry_point="environment.graphNodeBuildPEseqBoundaryNewRewardOnlyOnNewEdgeAndNodeFullAdjacency:GraphNodeBuildEnv",
+)
+
+register(
     id="c1-graphNodeBuildPEseqBRONN-v0",
     entry_point="environment.graphNodeBuildPEseqBoundaryNewRewardOnlyOnNewNode:GraphNodeBuildEnv",
 )
