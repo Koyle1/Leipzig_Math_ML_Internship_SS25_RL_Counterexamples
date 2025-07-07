@@ -101,7 +101,16 @@ class ModelCallback(BaseCallback):
                 if self.threshold is not None and final_step_reward is not None and final_step_reward >= self.threshold:
                     print(f"\n[Callback] Counterexample / proof found! Final step reward = {final_step_reward}")
                     print(f"[Callback] Saving model to {self.model_path}")
+                    
+                    # Save state
+                    state = observations[i] if isinstance(observations, (list, np.ndarray)) else observations
+                    state_path = os.path.join(
+                        self.state_dir,
+                        f"winning_state_ep{self.episode_count}_finalrew{final_step_reward:.2f}.npy"
+                    )
+                    np.save(state_path, state)
 
+                    # Save model
                     torch.save(self.model.policy.state_dict(), self.model_path)
                     self.found_proof = True
                     return False

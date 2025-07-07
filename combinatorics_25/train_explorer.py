@@ -41,7 +41,8 @@ def main():
     seed = get_seed(args.seed_nr)
     
     env = make_vec_env(args.enviroment,
-                       n_envs=args.n_env)
+                       n_envs=args.n_env,
+                       seed=seed)
     
     m = ExplorerModel(model_name=args.model,
                      env=env,
