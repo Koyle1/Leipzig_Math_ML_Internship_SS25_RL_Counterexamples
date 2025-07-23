@@ -8,19 +8,23 @@ class ModelCallback(BaseCallback):
     def __init__(
         self,
         save_freq: int = 1000,
-        save_path: str = "model.pth",
         threshold: float = None,
         verbose: int = 0,
-        state_save_dir: str = "./saved_states"
+        save_dir: str = "./training_run_logs"
     ):
         super().__init__(verbose)
         self.save_freq = save_freq
-        self.save_path = save_path
         self.threshold = threshold
         self.episode_count = 0
         self.found_proof = False
-        self.state_save_dir = state_save_dir
-        os.makedirs(self.state_save_dir, exist_ok=True)
+        model_dir = os.path.join(save_dir, "models")
+        self.state_dir = os.path.join(save_dir, "states")
+        os.makedirs(model_dir, exist_ok=True)
+        os.makedirs(self.state_dir, exist_ok=True)
+        self.model_path = os.path.join(
+                        model_dir,
+                        "model.pth"
+                    )
 
         self.best_graph_cumulative = -10_000
         self.best_graph_final_step = -10_000
@@ -86,7 +90,7 @@ class ModelCallback(BaseCallback):
                 ):
                     state = observations[i] if isinstance(observations, (list, np.ndarray)) else observations
                     state_path = os.path.join(
-                        self.state_save_dir,
+                        self.state_dir,
                         f"state_ep{self.episode_count}_finalrew{final_step_reward:.2f}.npy"
                     )
                     np.save(state_path, state)
@@ -96,14 +100,24 @@ class ModelCallback(BaseCallback):
                 # Stop training if threshold met on final step reward
                 if self.threshold is not None and final_step_reward is not None and final_step_reward >= self.threshold:
                     print(f"\n[Callback] Counterexample / proof found! Final step reward = {final_step_reward}")
-                    print(f"[Callback] Saving model to {self.save_path}")
-                    torch.save(self.model.policy.state_dict(), self.save_path)
+                    print(f"[Callback] Saving model to {self.model_path}")
+                    
+                    # Save state
+                    state = observations[i] if isinstance(observations, (list, np.ndarray)) else observations
+                    state_path = os.path.join(
+                        self.state_dir,
+                        f"winning_state_ep{self.episode_count}_finalrew{final_step_reward:.2f}.npy"
+                    )
+                    np.save(state_path, state)
+
+                    # Save model
+                    torch.save(self.model.policy.state_dict(), self.model_path)
                     self.found_proof = True
                     return False
 
         # Periodic model saving
         if self.n_calls % self.save_freq == 0:
-            torch.save(self.model.policy.state_dict(), self.save_path)
+            torch.save(self.model.policy.state_dict(), self.model_path)
             print(f"[Callback] Periodic save at step {self.n_calls}")
             print(f"[Callback] Current episode: {self.episode_count}")
 

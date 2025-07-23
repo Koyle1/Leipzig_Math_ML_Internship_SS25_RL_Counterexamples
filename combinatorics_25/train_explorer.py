@@ -16,12 +16,13 @@ import wandb
 
 def main():
     parser = argparse.ArgumentParser(description="Train a model.")
-    parser.add_argument("--save_path", type=str, default="seq_weights.pth", help="Path to save the model")
+    parser.add_argument("--checkpoint_path", type=str, default="seq_weights.pth", help="Path to a previous model checkpoint.")
     parser.add_argument("--seed_nr", type=int, default=0, help="Choose a seed between [0-19]")
     parser.add_argument("--enviroment", type=str, default="c2-graphNodeBuildPEseqB-v0", help="Choose an enviorment")
     parser.add_argument("--model", type=str, default="PPO", help="Choose an algorithm")
     parser.add_argument("--n_env", type=int, default=4, help="number of parallel enviroments")
     parser.add_argument("--stop_on_solution", type=bool, default=False, help="stop the training once a solution is found")
+    parser.add_argument("--save_path", type=str, default="./training_run_logs", help="Directory for saving training artifacts")
     
     args = parser.parse_args()
     
@@ -40,14 +41,16 @@ def main():
     seed = get_seed(args.seed_nr)
     
     env = make_vec_env(args.enviroment,
-                       n_envs=args.n_env)
+                       n_envs=args.n_env,
+                       seed=seed)
     
     m = ExplorerModel(model_name=args.model,
                      env=env,
                      seed=seed,
-                     stop_on_solution=args.stop_on_solution)
+                     stop_on_solution=args.stop_on_solution,
+                     log_dir=args.save_path)
     try:
-        m.load_weights(source=args.save_path)
+        m.load_weights(source=args.checkpoint_path)
     except:
         print("Prior weight not found")
     m.model_train()

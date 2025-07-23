@@ -8,7 +8,7 @@ import torch
 # Constants
 N = 19
 MAX_EDGES = int(N * (N - 1) / 2)
-OBSERVATION_SIZE = MAX_EDGES + 2  # adjacency matrix + current_node_scalar + edge_index_scalar
+OBSERVATION_SIZE = N * N + 2  # adjacency matrix + current_node_scalar + edge_index_scalar
 
 alpha = 1
 
@@ -136,19 +136,15 @@ class GraphNodeBuildEnv(gym.Env):
         adj_padded = np.zeros((N, N), dtype=np.float32)
         for u, v in self.graph.edges():
             adj_padded[u, v] = 1.0
-            # adj_padded[v, u] = 1.0 # only fill upper triangle
-
-        # adj_flat = adj_padded.flatten()  # Shape: (361,) would be used in case full adjacency matrix is used
-
-        triu_indices = np.triu_indices(N, k=1)
-        adj_compact = adj_padded[triu_indices]  # Shape: (N * (N - 1) / 2,)
+            adj_padded[v, u] = 1.0
+        adj_flat = adj_padded.flatten()  # Shape: (361,)
 
         # Step 2: Encode current node index and edge index as normalized scalars
         node_scalar = np.array([self.current_node / N], dtype=np.float32)
         edge_scalar = np.array([self.current_edge_idx / (N - 1)], dtype=np.float32)
 
         # Step 3: Concatenate into final observation
-        self.obs = np.concatenate([adj_compact, node_scalar, edge_scalar])  # Final shape: (363,)
+        self.obs = np.concatenate([adj_flat, node_scalar, edge_scalar])  # Final shape: (363,)
 
     def _recalculate_reward(self):
         # Includes surrogate model
