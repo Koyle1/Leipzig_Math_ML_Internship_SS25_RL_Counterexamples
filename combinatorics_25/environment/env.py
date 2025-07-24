@@ -20,13 +20,14 @@ from math import log1p
 from scipy.linalg import eigh
 
 def boundary_function(boundary: float = 0.0, fielder_score: float = 0.0):
+    # Computes a scaled exponential penalty based on the boundary and Fiedler score
     return np.exp(boundary - fielder_score)
 
 
 def calc_fiedler_value(G):
-    """Calculate the Fiedler value (algebraic connectivity)
-    using numpys eigvalsh function on the Laplacian. This appears to be faster than nx'
-    integrated function.
+    """
+        Compute the Fiedler value (2nd smallest eigenvalue of Laplacian),
+        which indicates graph connectivity.
     """
     L = nx.laplacian_matrix(G).astype(float).todense()
     lap_eigvals = np.linalg.eigvalsh(L)
@@ -41,11 +42,20 @@ def fiedler_value_path_graph(N):
     return calc_fiedler_value(G)
 
 def calc_reward_nx(G: nx.Graph, fiedler_score: dict[int, float], penalty: float = 0.0, save_dir: str = "saved_states"):
-    # All small float values used for numerical stability.
+    """
+        Computes the reward of the current graph using:
+        - adjacency spectrum
+        - Fiedler value
+        - size of max weight matching
+        - theoretical bound from a conjecture
+    """
+    
+    # Graphs smaller than 4 nodes will not be evaluated
     N_graph = G.number_of_nodes()
     if N_graph < 4:
         return 0
 
+    # Get adjacency matrix and its largest eigenvalue
     A = nx.to_numpy_array(G, nodelist=sorted(G.nodes()))
     adj_eigvals = np.linalg.eigvalsh(A) #sorted list of eigenvalues
     lambda_1 = adj_eigvals[-1] if len(adj_eigvals) > 0 else 0.0
@@ -63,17 +73,14 @@ def calc_reward_nx(G: nx.Graph, fiedler_score: dict[int, float], penalty: float 
     except Exception:
         mu = 0
 
+    # Conjecture-based scoring formula
     conjecture_value = math.sqrt(N_graph - 1) + 1 - lambda_1 - mu
 
     reward = conjecture_value - alpha * boundary
-    
+
+    # If conjecture is satisfied and graph is valid, assign high reward
     if conjecture_value > 0.000000000001 and N_graph > 4 and fiedler_value > 0.000000000001:
         reward = 10
-
-    # if reward == 10 and save_dir is not None and N_graph > 4:
-    #     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    #     filename = f"{save_dir}/graph_reward_{reward:.3f}_n{N}_e{G.number_of_edges()}_{timestamp}.graphml"
-    #     nx.write_graphml(G, filename)
 
     return reward
 

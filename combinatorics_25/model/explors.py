@@ -6,15 +6,20 @@ import os
 
 from collections import defaultdict, deque
 
-from model.model import Model  # Custom model factory
+from model.model import Model  # Custom model factory for policy (e.g., PPO)
 
 from stable_baselines3.common.callbacks import CallbackList
 
 from callbacks.modelCallback import ModelCallback
-from wandb.integration.sb3 import WandbCallback
+from wandb.integration.sb3 import WandbCallback # Optional logging via Weights & Biases
 
 # --- Intrinsic Reward Model ---
 class IntrinsicRewardModel(nn.Module):
+     """
+        A neural network that learns to predict an intrinsic reward based on state-action pairs.
+        Used to drive exploration beyond extrinsic environment rewards.
+    """
+    
     def __init__(self, obs_dim, act_dim):
         super().__init__()
         self.net = nn.Sequential(
@@ -31,6 +36,10 @@ class IntrinsicRewardModel(nn.Module):
 
 # --- Bonus Tracker ---
 class BonusTracker:
+    """
+        Keeps track of how often each state has been visited.
+        Provides a novelty bonus inversely proportional to visit count.
+    """
     def __init__(self):
         self.state_counts = defaultdict(int)
 
@@ -51,6 +60,10 @@ class BonusTracker:
 
 # --- Explorer Model with EXPLORS logic ---
 class ExplorerModel:
+    """
+        Wraps the RL policy model and integrates intrinsic reward modeling, novelty bonus tracking,
+        and adaptive policy/intrinsic model updates.
+    """
     def __init__(self, env, seed, model_name="PPO", buffer_size=50, stop_on_solution=False, log_dir="./training_run_logs"):
         self.env = env
         self.horizon = 171
@@ -78,12 +91,19 @@ class ExplorerModel:
                                 #      verbose=2)])
 
     def compute_intrinsic_reward(self, obs, action):
+        """
+            Predicts intrinsic reward for the given state-action pair using the learned model.
+        """
         obs_tensor = torch.tensor(obs, dtype=torch.float32).unsqueeze(0)
         action_tensor = torch.nn.functional.one_hot(torch.tensor(action), num_classes=self.env.action_space.n).float().unsqueeze(0)
         with torch.no_grad():
             return self.intrinsic_model(obs_tensor, action_tensor).item()
 
     def model_train(self, total_timesteps=1_000_000_000, intrinsic_coeff=0.2, update_policy_every=342, update_intrinsic_every=171):
+        """
+            Main training loop.
+            Alternates between policy learning and intrinsic model training, guided by intrinsic bonuses and rewards.
+        """
         obs = self.env.reset()
         trajectory = []
 
@@ -124,6 +144,10 @@ class ExplorerModel:
             #print(f"[{step}] R: {reward[0]:.2f} | IntR: {intrinsic_reward:.4f} | Bonus: {intrinsic_bonus:.4f} | Total: {total_reward:.4f}")
 
     def update_intrinsic_model(self, gamma=0.99, discounted: bool = False):
+        """
+            Trains the intrinsic reward model using stored trajectories.
+            The model tries to regress the cumulative reward from state-action pairs.
+        """
         if len(self.buffer) == 0:
             return
 

@@ -51,12 +51,6 @@ def main():
                      seed=seed,
                      stop_on_solution=args.stop_on_solution,
                      log_dir=args.save_path)
-    try:
-        # Train from prior weights if available
-        m.load_weights(source=args.checkpoint_path)
-    except:
-        #Otherwise use a newly initialised policy
-        print("Prior weight not found")
 
     # Use the custom training loop defined in ExplorerModel class
     m.model_train()
