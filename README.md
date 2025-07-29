@@ -1,5 +1,16 @@
 This project tries to improve upon the approach by Adam Zsolt Wagner (2021) for constructing counterexamples to conjectures in combinatorics using reinforcement learning.
 
+## Repository Overview
+
+The repository contains the following elements:
+- AMCS: Contains the Adaptive Monte Carlo Search algorithms including the score calculation, the amcs file and the nmcs file.
+- combinatorics_25: Contains our implemented model including
+  -  model callbacks
+  -  the implementation of environment
+  -  the model itself
+  -  log statistics & wandb logs
+- wagner_combinatorics: reduced and improved version of Wagner's approach
+
 ## Project Overview
 
 Wagner showed that reinforcement learning can be used to generate constructions and counterexamples to mathematical conjectures in combinatorics.
@@ -49,13 +60,5 @@ The intrinsic reward is updated after every complete graph construction and lear
 ## Our results
 
 We evaluated our approach, Wagners approach and the Adaptive Monte Carlos Search approach over 20 runs having defined random seeds.
-Our model improves on Wagner
-
-| Approach | Success rate | Avg. sample efficiency | Avg. time till counterexample is found | Stability over 1-3 |
-|-------------|-------------|-------------|-------------|-------------|
-| Wagner | | | | 
-| AMCS | 100% | 12.90 steps | 1.30s | Variance efficiency: 0.09; Variance time: 0.004 |
-
-
-
-
+Our model improves on Wagner in terms of convergance time and number of graph creations.
+AMCS remails multile orders of magnitude faster for this specific task.
